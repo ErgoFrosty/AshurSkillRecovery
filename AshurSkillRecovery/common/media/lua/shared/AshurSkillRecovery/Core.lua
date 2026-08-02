@@ -71,6 +71,35 @@ function ASR.getCurrentXP(playerObj, perk)
     return math.max(0, value)
 end
 
+function ASR.getPerkLevel(playerObj, perk)
+    if not playerObj or not perk then return nil end
+    local xp = playerObj and playerObj.getXp and playerObj:getXp()
+    if not xp then return nil end
+
+    local getters = {
+        function() return perk.getLevel and perk:getLevel() end,
+        function() return xp.getPerkLevel and xp:getPerkLevel(perk) end,
+        function() return xp.getLevel and xp:getLevel(perk) end,
+        function() return xp.getXpLevel and xp:getXpLevel(perk) end,
+    }
+
+    for _, getter in ipairs(getters) do
+        local ok, value = pcall(getter)
+        if ok and ASR.isFiniteNumber(value) then
+            return math.max(0, math.floor(value))
+        end
+    end
+    return nil
+end
+
+function ASR.getLevelXP(perk, level)
+    if not perk then return nil end
+    local resolvedLevel = math.max(0, math.floor(tonumber(level) or 0))
+    local ok, total = pcall(function() return perk:getTotalXpForLevel(resolvedLevel) end)
+    if not ok or not ASR.isFiniteNumber(total) then return nil end
+    return math.max(0, total)
+end
+
 local function knownRecipeSet(playerObj)
     local recipes = {}
     local known = playerObj:getKnownRecipes()
@@ -98,11 +127,14 @@ function ASR.captureBaseline(playerObj)
         lifeId = newLifeId(playerObj),
         capturedAtHours = playerObj:getHoursSurvived() or 0,
         baselineXP = {},
+        baselineLevels = {},
         baselineRecipes = knownRecipeSet(playerObj),
     }
 
     for _, perk in ipairs(ASR.getPerks()) do
-        state.baselineXP[perk:getId()] = ASR.getCurrentXP(playerObj, perk)
+        local perkId = perk:getId()
+        state.baselineXP[perkId] = ASR.getCurrentXP(playerObj, perk)
+        state.baselineLevels[perkId] = ASR.getPerkLevel(playerObj, perk)
     end
 
     root[ASR.PLAYER_DATA_KEY] = state
@@ -122,6 +154,9 @@ function ASR.ensureBaseline(playerObj)
     state.baselineRecipes = type(state.baselineRecipes) == "table"
         and state.baselineRecipes
         or knownRecipeSet(playerObj)
+    state.baselineLevels = type(state.baselineLevels) == "table"
+        and state.baselineLevels
+        or {}
 
     -- A perk added by another mod after this life began is treated
     -- conservatively: its current XP becomes the baseline on first sight.
@@ -129,6 +164,9 @@ function ASR.ensureBaseline(playerObj)
         local perkId = perk:getId()
         if not ASR.isFiniteNumber(state.baselineXP[perkId]) then
             state.baselineXP[perkId] = ASR.getCurrentXP(playerObj, perk)
+        end
+        if not ASR.isFiniteNumber(state.baselineLevels[perkId]) then
+            state.baselineLevels[perkId] = ASR.getPerkLevel(playerObj, perk)
         end
     end
     return state
@@ -153,10 +191,25 @@ function ASR.calculateEarnedXP(playerObj)
     for _, perk in ipairs(ASR.getPerks()) do
         if ASR.perkRecoveryEnabled(perk) then
             local perkId = perk:getId()
-            local amount = RecoveryMath.earned(
-                ASR.getCurrentXP(playerObj, perk),
-                state.baselineXP[perkId]
-            )
+            local baselineXP = state.baselineXP[perkId]
+            local currentXP = ASR.getCurrentXP(playerObj, perk)
+            local baselineLevel = state.baselineLevels[perkId]
+            local currentLevel = ASR.getPerkLevel(playerObj, perk)
+            local amount = nil
+
+            if ASR.isFiniteNumber(currentLevel) and ASR.isFiniteNumber(baselineLevel)
+                and currentLevel > baselineLevel then
+                local baselineThreshold = ASR.getLevelXP(perk, baselineLevel)
+                local currentThreshold = ASR.getLevelXP(perk, currentLevel)
+                if ASR.isFiniteNumber(baselineThreshold) and ASR.isFiniteNumber(currentThreshold) then
+                    amount = math.max(0, currentThreshold - baselineThreshold)
+                end
+            end
+
+            if not ASR.isFiniteNumber(amount) then
+                amount = RecoveryMath.earned(currentXP, baselineXP)
+            end
+
             if amount > 0 then earned[perkId] = amount end
         end
     end

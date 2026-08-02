@@ -27,7 +27,14 @@ end
 
 local strength = perk("Strength", true, 32775)
 local sprinting = perk("Sprinting", false, 32775)
-local perks = { strength, sprinting }
+local levelState = { currentLevel = 1 }
+local levelProgress = perk("LevelProgress", false, 32775)
+levelProgress.getLevel = function() return levelState.currentLevel end
+levelProgress.getTotalXpForLevel = function(_, level)
+    if level == 10 then return 32775 end
+    return level * 100
+end
+local perks = { strength, sprinting, levelProgress }
 
 Perks = {
     getMaxIndex = function() return #perks end,
@@ -122,5 +129,22 @@ local recipientWithOwnBonus = player({ Strength = 225, Sprinting = 0 }, {}, "bon
 ASR.captureBaseline(recipientWithOwnBonus)
 assert(Journal.read(recipientWithOwnBonus, item).ok == true)
 assert(recipientWithOwnBonus.xp.Strength == 1275)
+
+local levelSource = player({ LevelProgress = 0 }, {}, "levelsource")
+ASR.captureBaseline(levelSource)
+levelState.currentLevel = 2
+levelSource.xp.LevelProgress = 1000
+local earnedByLevel = ASR.calculateEarnedXP(levelSource)
+assert(earnedByLevel.LevelProgress == 100)
+
+local levelJournal = journal()
+assert(Journal.write(levelSource, levelJournal).ok == true)
+
+local levelRecipient = player({ LevelProgress = 0 }, {}, "levelrecipient")
+ASR.captureBaseline(levelRecipient)
+local levelRead = Journal.read(levelRecipient, levelJournal)
+assert(levelRead.ok == true)
+assert(levelRead.xp == 100)
+assert(levelRecipient.xp.LevelProgress == 100)
 
 print("journal integration: all tests passed")
