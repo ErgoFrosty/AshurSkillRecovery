@@ -1,0 +1,18 @@
+{
+  "UI_ASR_WriteAction": "Record earned progress",
+  "UI_ASR_ReadAction": "Restore earned progress",
+  "UI_ASR_Writing": "Recording earned progress",
+  "UI_ASR_Restoring": "Restoring earned progress",
+  "UI_ASR_WritePreview": "Updates %1 skills and adds %2 recipes. Starting skill bonuses are excluded.",
+  "UI_ASR_ReadPreview": "Restores %1 skills (%2 XP) and %3 recipes. Re-reading cannot add the same XP twice.",
+  "UI_ASR_WriteSuccess": "Journal updated: %1 skills, %2 recipes",
+  "UI_ASR_ReadSuccess": "Progress restored: %1 skills, %2 XP, %3 recipes",
+  "UI_ASR_NothingToWrite": "No new earned progress to record",
+  "UI_ASR_NothingToRestore": "This character already meets or exceeds the journal",
+  "UI_ASR_EmptyJournal": "The journal has no recorded progress",
+  "UI_ASR_InvalidJournal": "The server could not find this journal in your inventory",
+  "UI_ASR_IncompatibleJournal": "This journal uses an incompatible data version",
+  "UI_ASR_CorruptJournal": "The journal data is invalid",
+  "UI_ASR_CannotRead": "Cannot use the journal while asleep or illiterate",
+  "UI_ASR_ServerRejected": "The server rejected the journal operation"
+}

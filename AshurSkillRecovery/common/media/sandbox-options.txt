@@ -1,0 +1,17 @@
+VERSION = 1,
+
+option AshurSkillRecovery.RecoveryPercentage
+{ type = integer, min = 0, max = 100, default = 100, page = AshurSkillRecovery, translation = RecoveryPercentage, }
+
+option AshurSkillRecovery.RecoverRecipes
+{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverRecipes, }
+
+option AshurSkillRecovery.RecoverPassiveSkills
+{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverPassiveSkills, }
+
+option AshurSkillRecovery.WriteActionTime
+{ type = integer, min = 10, max = 5000, default = 300, page = AshurSkillRecovery, translation = WriteActionTime, }
+
+option AshurSkillRecovery.ReadActionTime
+{ type = integer, min = 10, max = 5000, default = 300, page = AshurSkillRecovery, translation = ReadActionTime, }
+

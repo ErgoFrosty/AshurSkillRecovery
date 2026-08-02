@@ -1,0 +1,13 @@
+{
+  "Sandbox_AshurSkillRecovery": "Ashur Skill Recovery",
+  "Sandbox_RecoveryPercentage": "Earned XP recovery (%)",
+  "Sandbox_RecoveryPercentage_tooltip": "Percentage of XP earned after character creation that the journal restores. Profession and trait starting XP is always excluded.",
+  "Sandbox_RecoverRecipes": "Record and restore learned recipes",
+  "Sandbox_RecoverPassiveSkills": "Record and restore Fitness and Strength",
+  "Sandbox_RecoverPassiveSkills_tooltip": "Passive skills use the same exact-baseline calculation. Starting Fitness and Strength are not transferred.",
+  "Sandbox_WriteActionTime": "Recording action time",
+  "Sandbox_WriteActionTime_tooltip": "Timed-action duration in game action units. Default: 300.",
+  "Sandbox_ReadActionTime": "Recovery action time",
+  "Sandbox_ReadActionTime_tooltip": "Timed-action duration in game action units. Default: 300."
+}
+

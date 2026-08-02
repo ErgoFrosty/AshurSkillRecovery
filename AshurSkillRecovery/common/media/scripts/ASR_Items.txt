@@ -1,0 +1,34 @@
+module AshurSkillRecovery
+{
+    imports
+    {
+        Base
+    }
+
+    item RecoveryJournal
+    {
+        DisplayCategory = Literature,
+        ItemType = base:normal,
+        Weight = 0.8,
+        Icon = Notebook,
+        Tooltip = Tooltip_ASR_Journal,
+    }
+
+    craftRecipe BindRecoveryJournal
+    {
+        time = 150,
+        Tags = InHandCraft,
+        category = General,
+        inputs
+        {
+            item 1 [Base.Notebook;Base.Journal;Base.Diary1;Base.Diary2;Base.Notepad] mode:destroy,
+            item 1 [Base.Glue;Base.Woodglue] flags[Prop1],
+            item 1 [Base.Thread;Base.Twine;Base.FishingLine;Base.DentalFloss],
+        }
+        outputs
+        {
+            item 1 AshurSkillRecovery.RecoveryJournal,
+        }
+    }
+}
+

@@ -1,0 +1,13 @@
+{
+  "Sandbox_AshurSkillRecovery": "Ashur Skill Recovery",
+  "Sandbox_RecoveryPercentage": "Восстановление заработанного XP (%)",
+  "Sandbox_RecoveryPercentage_tooltip": "Процент XP, заработанного после создания персонажа, который восстановит дневник. Стартовый XP профессии и черт всегда исключается.",
+  "Sandbox_RecoverRecipes": "Записывать и восстанавливать изученные рецепты",
+  "Sandbox_RecoverPassiveSkills": "Записывать и восстанавливать Фитнес и Силу",
+  "Sandbox_RecoverPassiveSkills_tooltip": "Пассивные навыки используют тот же расчёт по точной стартовой базе. Стартовые Фитнес и Сила не переносятся.",
+  "Sandbox_WriteActionTime": "Длительность записи",
+  "Sandbox_WriteActionTime_tooltip": "Длительность действия в игровых единицах. По умолчанию: 300.",
+  "Sandbox_ReadActionTime": "Длительность восстановления",
+  "Sandbox_ReadActionTime_tooltip": "Длительность действия в игровых единицах. По умолчанию: 300."
+}
+
