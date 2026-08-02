@@ -31,4 +31,3 @@ ASR.dispatchClientCommand = function(command, args)
 end
 
 Events.OnServerCommand.Add(onServerCommand)
-

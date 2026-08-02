@@ -86,4 +86,3 @@ function ASRRecoveryAction:new(character, item, mode)
 end
 
 return ASRRecoveryAction
-

@@ -86,4 +86,3 @@ end
 Events.OnPreFillInventoryObjectContextMenu.Add(Context.onFill)
 
 return Context
-

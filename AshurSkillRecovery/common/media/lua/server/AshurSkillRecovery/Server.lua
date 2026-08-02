@@ -49,4 +49,3 @@ local function onClientCommand(module, command, playerObj, args)
 end
 
 Events.OnClientCommand.Add(onClientCommand)
-

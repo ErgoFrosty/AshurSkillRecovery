@@ -24,4 +24,3 @@ close(Math.mergeMaximum(1050, 500), 1050, "weaker writer cannot overwrite")
 close(Math.mergeMaximum(1050, 1400), 1400, "stronger writer updates")
 
 print("recovery math: all tests passed")
-

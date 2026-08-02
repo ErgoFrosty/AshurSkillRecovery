@@ -12,4 +12,3 @@ Events.OnCreatePlayer.Add(initializePlayer)
 Events.OnGameTimeLoaded.Add(resetPerkCache)
 
 print("[AshurSkillRecovery] loaded schema " .. tostring(ASR.SCHEMA_VERSION))
-

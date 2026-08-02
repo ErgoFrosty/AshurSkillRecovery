@@ -37,4 +37,3 @@ function RecoveryMath.mergeMaximum(existing, candidate)
 end
 
 return RecoveryMath
-

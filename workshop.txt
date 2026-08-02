@@ -4,4 +4,3 @@ title=Ashur Skill Recovery
 description=Records and restores only XP and recipes earned after character creation. Starting profession and trait bonuses are never transferred.
 tags=Build 42;Multiplayer;Balance
 visibility=private
-

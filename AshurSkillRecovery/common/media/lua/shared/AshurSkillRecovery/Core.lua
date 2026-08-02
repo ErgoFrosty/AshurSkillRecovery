@@ -191,4 +191,3 @@ function ASR.hasJournalContent(item)
 end
 
 return ASR
-

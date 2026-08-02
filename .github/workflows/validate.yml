@@ -17,4 +17,3 @@ jobs:
       - run: python tests/run_lua_tests.py
       - shell: pwsh
         run: ./build.ps1 -Validate -LocalTest
-
