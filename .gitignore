@@ -1,0 +1,10 @@
+.reference/
+.smoke/
+.venv/
+.github-stage/
+SkillRecJournal_for_audit/
+.python-version
+tmp/
+dist/
+__pycache__/
+*.pyc
