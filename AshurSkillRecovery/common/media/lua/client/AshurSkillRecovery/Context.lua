@@ -39,7 +39,7 @@ function Context.onFill(playerNum, context, items)
     ASR.ensureBaseline(playerObj)
     local unavailable = playerObj:isAsleep() or playerObj:hasTrait(CharacterTrait.ILLITERATE)
 
-    local writeSkills, writeRecipes = Journal.previewWrite(playerObj, journal)
+    local writeSkills, writeRecipes, writeReason = Journal.previewWrite(playerObj, journal)
     local writeOption = context:addOptionOnTop(
         getText("UI_ASR_WriteAction"),
         actualItems,
@@ -47,9 +47,9 @@ function Context.onFill(playerNum, context, items)
         playerObj,
         "write"
     )
-    if unavailable or (writeSkills == 0 and writeRecipes == 0) then
+    if unavailable or writeReason or (writeSkills == 0 and writeRecipes == 0) then
         writeOption.notAvailable = true
-        writeOption.toolTip = tooltip(getText(unavailable and "UI_ASR_CannotRead" or "UI_ASR_NothingToWrite"))
+        writeOption.toolTip = tooltip(getText(unavailable and "UI_ASR_CannotRead" or writeReason or "UI_ASR_NothingToWrite"))
     else
         writeOption.toolTip = tooltip(getText(
             "UI_ASR_WritePreview",
@@ -58,7 +58,7 @@ function Context.onFill(playerNum, context, items)
         ))
     end
 
-    local readSkills, readRecipes, readXP = Journal.previewRead(playerObj, journal)
+    local readSkills, readRecipes, readXP, readReason = Journal.previewRead(playerObj, journal)
     local readOption = context:addOptionOnTop(
         getText("UI_ASR_ReadAction"),
         actualItems,
@@ -66,10 +66,10 @@ function Context.onFill(playerNum, context, items)
         playerObj,
         "read"
     )
-    if unavailable or not ASR.hasJournalContent(journal)
+    if unavailable or readReason or not ASR.hasJournalContent(journal)
         or (readSkills == 0 and readRecipes == 0) then
         readOption.notAvailable = true
-        local key = unavailable and "UI_ASR_CannotRead"
+        local key = unavailable and "UI_ASR_CannotRead" or readReason
             or (not ASR.hasJournalContent(journal) and "UI_ASR_EmptyJournal")
             or "UI_ASR_NothingToRestore"
         readOption.toolTip = tooltip(getText(key))

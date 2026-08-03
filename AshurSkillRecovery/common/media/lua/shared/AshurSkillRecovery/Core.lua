@@ -7,10 +7,28 @@ ASR.MODULE = "AshurSkillRecovery"
 ASR.ITEM_FULL_TYPE = "AshurSkillRecovery.RecoveryJournal"
 ASR.PLAYER_DATA_KEY = "AshurSkillRecovery"
 ASR.ITEM_DATA_KEY = "AshurSkillRecovery"
-ASR.SCHEMA_VERSION = 1
+ASR.SCHEMA_VERSION = 2
 ASR.Math = RecoveryMath
 
+function ASR.logError(...)
+    print("[AshurSkillRecovery] ERROR:", ...)
+end
+
 local perkCache = nil
+
+-- This is deliberately an allow-list.  Skills supplied by other mods are not
+-- journalled, even when they have a normal Perk parent.
+ASR.VANILLA_PERK_IDS = {
+    Aiming = true, Axe = true, Blacksmith = true, Blunt = true, Butchering = true,
+    Carving = true, Carpentry = true, Cooking = true, Electricity = true,
+    Farming = true, FirstAid = true, Fishing = true, Fitness = true,
+    FlintKnapping = true, Foraging = true, Glassmaking = true, Husbandry = true,
+    Lightfoot = true, LongBlade = true, Maintenance = true, Masonry = true,
+    Mechanics = true, MetalWelding = true, Nimble = true, PlantScavenging = true,
+    Pottery = true, Reloading = true, SmallBlade = true, SmallBlunt = true,
+    Sneak = true, Spear = true, Sprinting = true, Strength = true, Tailoring = true,
+    Tracking = true, Trapping = true, Woodwork = true,
+}
 
 function ASR.isFiniteNumber(value)
     return type(value) == "number"
@@ -25,10 +43,49 @@ function ASR.getOption(name, fallback)
     return fallback
 end
 
+function ASR.getItemModData(item)
+    if not item or not item.getModData then return nil end
+    local ok, data = pcall(function() return item:getModData() end)
+    return ok and type(data) == "table" and data or nil
+end
+
+function ASR.getPlayerModData(playerObj)
+    if not playerObj or not playerObj.getModData then return nil end
+    local ok, data = pcall(function() return playerObj:getModData() end)
+    return ok and type(data) == "table" and data or nil
+end
+
+function ASR.getPlayerOwnerId(playerObj)
+    if not playerObj then return nil end
+    local username = nil
+    if playerObj.getUsername then
+        local ok, value = pcall(function() return playerObj:getUsername() end)
+        if ok and type(value) == "string" and value ~= "" then username = value end
+    end
+    if username then return "username:" .. username end
+    if playerObj.getPlayerNum then
+        local ok, number = pcall(function() return playerObj:getPlayerNum() end)
+        if ok and ASR.isFiniteNumber(number) then return "local:" .. tostring(number) end
+    end
+    return nil
+end
+
+function ASR.getPlayerDisplayName(playerObj)
+    if playerObj and playerObj.getFullName then
+        local ok, value = pcall(function() return playerObj:getFullName() end)
+        if ok and type(value) == "string" and value ~= "" then return value end
+    end
+    return ""
+end
+
 function ASR.isSupportedPerk(perk)
     if not perk or not perk.getId or not perk.getParent then return false end
-    local parent = perk:getParent()
-    return parent ~= nil and parent:getId() ~= "None"
+    local okId, perkId = pcall(function() return perk:getId() end)
+    if not okId or ASR.VANILLA_PERK_IDS[perkId] ~= true then return false end
+    local okParent, parent = pcall(function() return perk:getParent() end)
+    if not okParent or not parent then return false end
+    local okParentId, parentId = pcall(function() return parent:getId() end)
+    return okParentId and parentId ~= "None"
 end
 
 function ASR.rebuildPerkCache()
@@ -66,8 +123,10 @@ end
 
 function ASR.getCurrentXP(playerObj, perk)
     if not playerObj or not perk then return 0 end
-    local value = playerObj:getXp():getXP(perk)
-    if not ASR.isFiniteNumber(value) then return 0 end
+    local xp = playerObj.getXp and playerObj:getXp()
+    if not xp or not xp.getXP then return 0 end
+    local ok, value = pcall(function() return xp:getXP(perk) end)
+    if not ok or not ASR.isFiniteNumber(value) then return 0 end
     return math.max(0, value)
 end
 
@@ -152,7 +211,8 @@ local function newLifeId(playerObj)
 end
 
 function ASR.captureBaseline(playerObj)
-    local root = playerObj:getModData()
+    local root = ASR.getPlayerModData(playerObj)
+    if not root then return nil end
     local state = {
         schemaVersion = ASR.SCHEMA_VERSION,
         lifeId = newLifeId(playerObj),
@@ -174,13 +234,15 @@ end
 
 function ASR.ensureBaseline(playerObj)
     if not playerObj then return nil end
-    local root = playerObj:getModData()
+    local root = ASR.getPlayerModData(playerObj)
+    if not root then return nil end
     local state = root[ASR.PLAYER_DATA_KEY]
     if type(state) ~= "table"
-        or state.schemaVersion ~= ASR.SCHEMA_VERSION
         or type(state.baselineXP) ~= "table" then
         state = ASR.captureBaseline(playerObj)
     end
+    if not state then return nil end
+    state.schemaVersion = ASR.SCHEMA_VERSION
 
     state.baselineRecipes = type(state.baselineRecipes) == "table"
         and state.baselineRecipes
@@ -210,17 +272,28 @@ end
 
 function ASR.perkRecoveryEnabled(perk)
     if not perk then return false end
-    if perk:isPassiv() and ASR.getOption("RecoverPassiveSkills", true) ~= true then
-        return false
-    end
-    return true
+    local perkId = perk:getId()
+    local legacy = (perkId == "Fitness" or perkId == "Strength")
+        and ASR.getOption("RecoverPassiveSkills", true)
+        or true
+    return ASR.getOption("Recover" .. perkId, legacy) == true
+end
+
+function ASR.perkRecordingEnabled(perk)
+    if not perk then return false end
+    local perkId = perk:getId()
+    local legacy = (perkId == "Fitness" or perkId == "Strength")
+        and ASR.getOption("RecoverPassiveSkills", true)
+        or true
+    return ASR.getOption("Record" .. perkId, legacy) == true
 end
 
 function ASR.calculateEarnedXP(playerObj)
     local state = ASR.ensureBaseline(playerObj)
+    if not state then return nil end
     local earned = {}
     for _, perk in ipairs(ASR.getPerks()) do
-        if ASR.perkRecoveryEnabled(perk) then
+        if ASR.perkRecordingEnabled(perk) then
             local perkId = perk:getId()
             local baselineXP = state.baselineXP[perkId]
             local currentXP = ASR.getCurrentXP(playerObj, perk)
@@ -249,6 +322,7 @@ end
 
 function ASR.calculateEarnedRecipes(playerObj)
     local state = ASR.ensureBaseline(playerObj)
+    if not state then return nil end
     local current = knownRecipeSet(playerObj)
     local earned = {}
     for recipeId in pairs(current) do
@@ -263,7 +337,9 @@ end
 
 function ASR.getJournalData(item)
     if not ASR.isJournal(item) then return nil end
-    local value = item:getModData()[ASR.ITEM_DATA_KEY]
+    local modData = ASR.getItemModData(item)
+    if not modData then return nil end
+    local value = modData[ASR.ITEM_DATA_KEY]
     return type(value) == "table" and value or nil
 end
 

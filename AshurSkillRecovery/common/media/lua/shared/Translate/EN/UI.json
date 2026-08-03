@@ -15,4 +15,9 @@
   "UI_ASR_CorruptJournal": "The journal data is invalid",
   "UI_ASR_CannotRead": "Cannot use the journal while asleep or illiterate",
   "UI_ASR_ServerRejected": "The server rejected the journal operation"
+  ,"UI_ASR_DataUnavailable": "Journal data is temporarily unavailable"
+  ,"UI_ASR_OwnerUnavailable": "Cannot identify this journal's owner"
+  ,"UI_ASR_NotJournalOwner": "Only this journal's owner can use it"
+  ,"UI_ASR_AlreadyHasJournal": "This player already has a recovery journal"
+  ,"UI_ASR_JournalName": "Journal %1"
 }

@@ -15,4 +15,9 @@
   "UI_ASR_CorruptJournal": "Данные дневника повреждены",
   "UI_ASR_CannotRead": "Нельзя использовать дневник во сне или с неграмотностью",
   "UI_ASR_ServerRejected": "Сервер отклонил действие с дневником"
+  ,"UI_ASR_DataUnavailable": "Данные дневника временно недоступны"
+  ,"UI_ASR_OwnerUnavailable": "Не удалось определить владельца дневника"
+  ,"UI_ASR_NotJournalOwner": "Дневник может использовать только его владелец"
+  ,"UI_ASR_AlreadyHasJournal": "У этого игрока уже есть дневник восстановления"
+  ,"UI_ASR_JournalName": "Дневник %1"
 }

@@ -86,6 +86,7 @@ local function journal()
     function value:getFullType() return "AshurSkillRecovery.RecoveryJournal" end
     function value:getModData() return self.modData end
     function value:getID() return 7 end
+    function value:setName(name) self.name = name end
     return value
 end
 
@@ -109,20 +110,9 @@ emptyJournal.modData.AshurSkillRecovery.recipes.LearnedFromItem = true
 assert(ASR.hasJournalContent(emptyJournal) == true)
 next = savedNext
 
-local function levelTestPlayer(initialXP, initialRecipes, username)
-    local value = player(initialXP, initialRecipes, username)
-    value.xpObject.getLevel = function(self) return value.xp.LevelProgress or 0 end
-    return value
-end
+assert(ASR.getPerk("LevelProgress") == nil)
 
-local levelPerk = perk("LevelProgress", false, 32775)
-
-local levelSource = levelTestPlayer({ LevelProgress = 0 }, {}, "levelsource")
-ASR.captureBaseline(levelSource)
-levelSource.xp.LevelProgress = 2
-assert(ASR.getPerkLevel(levelSource, levelPerk) == 2)
-
-local source = player({ Strength = 225, Sprinting = 0 }, { StartingRecipe = true }, "source")
+local source = player({ Strength = 225, Sprinting = 0 }, { StartingRecipe = true }, "owner")
 ASR.captureBaseline(source)
 source.xp.Strength = 1275
 source.xp.Sprinting = 400
@@ -136,7 +126,7 @@ assert(item.modData.AshurSkillRecovery.earnedXP.Sprinting == 400)
 assert(item.modData.AshurSkillRecovery.recipes.LearnedFromItem == true)
 assert(item.modData.AshurSkillRecovery.recipes.StartingRecipe == nil)
 
-local second = player({ Strength = 0, Sprinting = 0 }, {}, "second")
+local second = player({ Strength = 0, Sprinting = 0 }, {}, "owner")
 ASR.captureBaseline(second)
 local firstRead = Journal.read(second, item)
 assert(firstRead.ok == true)
@@ -150,7 +140,7 @@ assert(repeatedRead.reason == "UI_ASR_NothingToRestore")
 assert(second.xp.Strength == 1050)
 assert(second.xp.Sprinting == 400)
 
-local third = player({ Strength = 0, Sprinting = 0 }, {}, "third")
+local third = player({ Strength = 0, Sprinting = 0 }, {}, "owner")
 ASR.captureBaseline(third)
 local thirdRead = Journal.read(third, item)
 assert(thirdRead.ok == true)
@@ -158,7 +148,7 @@ assert(third.xp.Strength == 1050)
 assert(third.xp.Sprinting == 400)
 assert(third.recipes.LearnedFromItem == true)
 
-local failedRestore = player({ Strength = 0, Sprinting = 0 }, { LearnedFromItem = true }, "failed")
+local failedRestore = player({ Strength = 0, Sprinting = 0 }, { LearnedFromItem = true }, "owner")
 ASR.captureBaseline(failedRestore)
 local savedAddXpNoMultiplier = addXpNoMultiplier
 local savedASRAddXpNoMultiplier = ASR.addXpNoMultiplier
@@ -170,26 +160,33 @@ assert(failedRestore.xp.Strength == 0)
 addXpNoMultiplier = savedAddXpNoMultiplier
 ASR.addXpNoMultiplier = savedASRAddXpNoMultiplier
 
-local recipientWithOwnBonus = player({ Strength = 225, Sprinting = 0 }, {}, "bonus")
+local recipientWithOwnBonus = player({ Strength = 225, Sprinting = 0 }, {}, "owner")
 ASR.captureBaseline(recipientWithOwnBonus)
 assert(Journal.read(recipientWithOwnBonus, item).ok == true)
 assert(recipientWithOwnBonus.xp.Strength == 1275)
 
-local levelSource = player({ LevelProgress = 0 }, {}, "levelsource")
-ASR.captureBaseline(levelSource)
-levelState.currentLevel = 2
-levelSource.xp.LevelProgress = 1000
-local earnedByLevel = ASR.calculateEarnedXP(levelSource)
-assert(earnedByLevel.LevelProgress == 100)
+local foreign = player({ Strength = 0, Sprinting = 0 }, {}, "foreign")
+ASR.captureBaseline(foreign)
+local foreignRead = Journal.read(foreign, item)
+assert(foreignRead.ok == false)
+assert(foreignRead.reason == "UI_ASR_NotJournalOwner")
 
-local levelJournal = journal()
-assert(Journal.write(levelSource, levelJournal).ok == true)
+local legacy = journal()
+legacy.modData.AshurSkillRecovery = {
+    schemaVersion = 1, earnedXP = { Strength = 100 }, recipes = {},
+}
+local legacyOwner = player({ Strength = 0 }, {}, "legacy-owner")
+ASR.captureBaseline(legacyOwner)
+assert(Journal.read(legacyOwner, legacy).ok == true)
+assert(legacy.modData.AshurSkillRecovery.schemaVersion == ASR.SCHEMA_VERSION)
+assert(legacy.modData.AshurSkillRecovery.ownerId == "username:legacy-owner")
+assert(legacy.name == "Journal legacy-owner")
 
-local levelRecipient = player({ LevelProgress = 0 }, {}, "levelrecipient")
-ASR.captureBaseline(levelRecipient)
-local levelRead = Journal.read(levelRecipient, levelJournal)
-assert(levelRead.ok == true)
-assert(levelRead.xp == 100)
-assert(levelRecipient.xp.LevelProgress == 100)
+SandboxVars.AshurSkillRecovery.RecordStrength = false
+assert(ASR.calculateEarnedXP(source).Strength == nil)
+SandboxVars.AshurSkillRecovery.RecordStrength = true
+SandboxVars.AshurSkillRecovery.RecoverStrength = false
+assert(Journal.previewRead(second, item) == 0)
+SandboxVars.AshurSkillRecovery.RecoverStrength = true
 
 print("journal integration: all tests passed")
