@@ -16,6 +16,7 @@ end
 
 local function applyJournalName(item, data)
     if item.setName then pcall(function() item:setName(data.customName) end) end
+    if item.setCustomName then pcall(function() item:setCustomName(true) end) end
 end
 
 local function normalizeCustomName(value)
@@ -253,6 +254,13 @@ function Journal.rename(playerObj, item, customName)
     applyJournalName(item, data)
     syncJournal(playerObj, item)
     return { ok = true, name = normalized, revision = data.revision }
+end
+
+function Journal.initialize(playerObj, item)
+    local data, reason = validateOwner(playerObj, item, true)
+    if not data then return nil, reason end
+    syncJournal(playerObj, item)
+    return data
 end
 
 function Journal.isOwner(playerObj, item)

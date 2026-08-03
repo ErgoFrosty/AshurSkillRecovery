@@ -16,7 +16,9 @@ module AshurSkillRecovery
 
     craftRecipe BindRecoveryJournal
     {
+        timedAction = Making,
         time = 150,
+        OnCreate = AshurSkillRecovery.onCreateRecoveryJournal,
         Tags = InHandCraft,
         category = General,
         inputs

@@ -23,6 +23,11 @@ local function resolveOwnedJournal(playerObj, itemId)
     return item
 end
 
+function AshurSkillRecovery.onCreateRecoveryJournal(items, result, playerObj)
+    if not playerObj or not ASR.isJournal(result) then return end
+    Journal.initialize(playerObj, result)
+end
+
 function ASR.commitOperation(playerObj, args)
     args = type(args) == "table" and args or {}
     local mode = args.mode == "read" and "read" or (args.mode == "write" and "write" or nil)

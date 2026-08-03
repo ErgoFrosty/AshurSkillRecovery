@@ -30,6 +30,15 @@ def main() -> None:
     scripts = (MOD / "common" / "media" / "scripts" / "ASR_Items.txt").read_text(encoding="utf-8")
     assert "Notebook/Journal" not in scripts
     assert "AshurSkillRecovery.RecoveryJournal" in scripts
+    assert "timedAction = Making" in scripts
+    assert "OnCreate = AshurSkillRecovery.onCreateRecoveryJournal" in scripts
+
+    context = (MOD / "common" / "media" / "lua" / "client" / "AshurSkillRecovery" / "Context.lua").read_text(encoding="utf-8")
+    assert "local function promptRename(item, playerObj)" in context
+    assert "text, playerObj, renameJournal, item)" in context
+
+    journal = (MOD / "common" / "media" / "lua" / "shared" / "AshurSkillRecovery" / "Journal.lua").read_text(encoding="utf-8")
+    assert "item:setCustomName(true)" in journal
 
     lua_files = sorted((MOD / "common" / "media" / "lua").rglob("*.lua"))
     assert lua_files, "no Lua source files found"

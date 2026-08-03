@@ -95,6 +95,7 @@ local function journal()
     function value:getID() return self.id end
     function value:getContainer() return self.container end
     function value:setName(name) self.name = name end
+    function value:setCustomName(value) self.customName = value end
     return value
 end
 
@@ -131,6 +132,7 @@ local writeResult = Journal.write(source, item)
 assert(writeResult.ok == true)
 assert(item.modData.AshurSkillRecovery.customName == "Дневник восстановления")
 assert(item.name == "Дневник восстановления")
+assert(item.customName == true)
 assert(item.modData.AshurSkillRecovery.earnedXP.Strength == 1050)
 assert(item.modData.AshurSkillRecovery.earnedXP.Sprinting == 400)
 assert(item.modData.AshurSkillRecovery.recipes.LearnedFromItem == true)
@@ -221,6 +223,13 @@ local ownerItems = { item, secondJournal }
 owner.getInventory = function() return inventory(ownerItems) end
 local serverResult = nil
 ASR.dispatchClientCommand = function(_, payload) serverResult = payload end
+local createdData = Journal.initialize(owner, secondJournal)
+assert(createdData ~= nil)
+assert(createdData.ownerId == "username:owner")
+assert(createdData.journalId ~= item.modData.AshurSkillRecovery.journalId)
+assert(createdData.customName == "Дневник восстановления")
+assert(secondJournal.name == "Дневник восстановления")
+assert(secondJournal.customName == true)
 ASR.commitOperation(owner, { mode = "write", itemId = secondJournal:getID() })
 assert(serverResult.ok == true)
 assert(secondJournal.modData.AshurSkillRecovery.journalId ~= item.modData.AshurSkillRecovery.journalId)

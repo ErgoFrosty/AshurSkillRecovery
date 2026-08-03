@@ -36,10 +36,10 @@ local function renameJournal(button, playerObj, item)
     end
 end
 
-local function promptRename(playerObj, item)
+local function promptRename(item, playerObj)
     local data = ASR.getJournalData(item)
     local text = data and data.customName or "Дневник восстановления"
-    local modal = ISTextBox:new(0, 0, 280, 180, getText("UI_ASR_RenamePrompt"), text, nil, renameJournal, playerObj, item)
+    local modal = ISTextBox:new(0, 0, 280, 180, getText("UI_ASR_RenamePrompt"), text, playerObj, renameJournal, item)
     modal:initialise()
     modal:addToUIManager()
 end
@@ -59,7 +59,7 @@ function Context.onFill(playerNum, context, items)
     local unavailable = playerObj:isAsleep() or playerObj:hasTrait(CharacterTrait.ILLITERATE)
 
     if Journal.isOwner(playerObj, journal) then
-        context:addOptionOnTop(getText("UI_ASR_RenameAction"), journal, promptRename, playerObj, journal)
+        context:addOptionOnTop(getText("UI_ASR_RenameAction"), journal, promptRename, playerObj)
     end
 
     local writeSkills, writeRecipes, writeReason = Journal.previewWrite(playerObj, journal)
