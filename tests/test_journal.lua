@@ -89,6 +89,22 @@ end
 local ASR = require "AshurSkillRecovery/Core"
 local Journal = require "AshurSkillRecovery/Journal"
 
+local emptyJournal = journal()
+emptyJournal.modData.AshurSkillRecovery = {
+    schemaVersion = ASR.SCHEMA_VERSION,
+    earnedXP = {},
+    recipes = {},
+}
+local savedNext = next
+next = nil
+assert(ASR.hasJournalContent(emptyJournal) == false)
+emptyJournal.modData.AshurSkillRecovery.earnedXP.Strength = 1
+assert(ASR.hasJournalContent(emptyJournal) == true)
+emptyJournal.modData.AshurSkillRecovery.earnedXP = {}
+emptyJournal.modData.AshurSkillRecovery.recipes.LearnedFromItem = true
+assert(ASR.hasJournalContent(emptyJournal) == true)
+next = savedNext
+
 local function levelTestPlayer(initialXP, initialRecipes, username)
     local value = player(initialXP, initialRecipes, username)
     value.xpObject.getLevel = function(self) return value.xp.LevelProgress or 0 end

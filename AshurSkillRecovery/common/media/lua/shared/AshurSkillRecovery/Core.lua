@@ -267,11 +267,16 @@ function ASR.getJournalData(item)
     return type(value) == "table" and value or nil
 end
 
+local function hasEntries(value)
+    for _ in pairs(value) do return true end
+    return false
+end
+
 function ASR.hasJournalContent(item)
     local data = ASR.getJournalData(item)
     if not data or data.schemaVersion ~= ASR.SCHEMA_VERSION then return false end
-    if type(data.earnedXP) == "table" and next(data.earnedXP) ~= nil then return true end
-    return type(data.recipes) == "table" and next(data.recipes) ~= nil
+    if type(data.earnedXP) == "table" and hasEntries(data.earnedXP) then return true end
+    return type(data.recipes) == "table" and hasEntries(data.recipes)
 end
 
 return ASR
