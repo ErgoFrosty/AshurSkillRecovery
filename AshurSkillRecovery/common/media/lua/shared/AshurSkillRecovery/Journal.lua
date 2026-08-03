@@ -4,6 +4,7 @@ local RecoveryMath = ASR.Math
 local Journal = {}
 local MAX_RECIPES = 4096
 local MAX_RECIPE_ID_LENGTH = 256
+local logError = ASR.logError or function(...) print("[AshurSkillRecovery] ERROR:", ...) end
 
 local function newJournalId(item)
     local stamp = getTimestampMs and getTimestampMs() or 0
@@ -37,6 +38,18 @@ local function validateData(item, allowCreate)
     return data, nil
 end
 
+local function safeEarnedXP(playerObj)
+    local ok, earned = pcall(ASR.calculateEarnedXP, playerObj)
+    if ok and type(earned) == "table" then return earned end
+    return {}
+end
+
+local function safeEarnedRecipes(playerObj)
+    local ok, earned = pcall(ASR.calculateEarnedRecipes, playerObj)
+    if ok and type(earned) == "table" then return earned end
+    return {}
+end
+
 local function syncJournal(playerObj, item)
     if isServer() then syncItemModData(playerObj, item) end
 end
@@ -48,18 +61,35 @@ local function safeSavedXP(perk, value)
     return value
 end
 
+local function restoreXP(playerObj, perk, amount)
+    local addXP = ASR.addXpNoMultiplier or addXpNoMultiplier
+    if type(addXP) ~= "function" then
+        logError("Cannot restore XP: addXpNoMultiplier unavailable", perk:getId())
+        return false
+    end
+
+    local before = ASR.getCurrentXP(playerObj, perk)
+    local ok, err = pcall(addXP, playerObj, perk, amount)
+    if not ok then
+        logError("addXpNoMultiplier failed for perk", perk:getId(), err)
+        return false
+    end
+    return ASR.getCurrentXP(playerObj, perk) > before
+end
+
 function Journal.previewWrite(playerObj, item)
     local existing = ASR.getJournalData(item)
     local saved = existing and type(existing.earnedXP) == "table" and existing.earnedXP or {}
     local savedRecipes = existing and type(existing.recipes) == "table" and existing.recipes or {}
     local skills = 0
     local recipes = 0
+    local earnedXP = safeEarnedXP(playerObj)
 
-    for perkId, amount in pairs(ASR.calculateEarnedXP(playerObj)) do
+    for perkId, amount in pairs(earnedXP) do
         if amount > (tonumber(saved[perkId]) or 0) then skills = skills + 1 end
     end
     if ASR.getOption("RecoverRecipes", true) == true then
-        for recipeId in pairs(ASR.calculateEarnedRecipes(playerObj)) do
+        for recipeId in pairs(safeEarnedRecipes(playerObj)) do
             if savedRecipes[recipeId] ~= true then recipes = recipes + 1 end
         end
     end
@@ -113,14 +143,14 @@ function Journal.write(playerObj, item)
     local data, reason = validateData(item, true)
     if not data then return { ok = false, reason = reason } end
 
-    for perkId, amount in pairs(ASR.calculateEarnedXP(playerObj)) do
+    for perkId, amount in pairs(safeEarnedXP(playerObj)) do
         local perk = ASR.getPerk(perkId)
         local candidate = safeSavedXP(perk, amount)
         data.earnedXP[perkId] = RecoveryMath.mergeMaximum(data.earnedXP[perkId], candidate)
     end
 
     if ASR.getOption("RecoverRecipes", true) == true then
-        for recipeId in pairs(ASR.calculateEarnedRecipes(playerObj)) do
+        for recipeId in pairs(safeEarnedRecipes(playerObj)) do
             if type(recipeId) == "string" and #recipeId <= MAX_RECIPE_ID_LENGTH then
                 data.recipes[recipeId] = true
             end
@@ -160,9 +190,10 @@ function Journal.read(playerObj, item)
             )
             local grant = RecoveryMath.grant(ASR.getCurrentXP(playerObj, perk), target)
             if grant > 0 then
-                playerObj:getXp():AddXPNoMultiplier(perk, grant)
-                changedSkills = changedSkills + 1
-                totalXP = totalXP + grant
+                if restoreXP(playerObj, perk, grant) then
+                    changedSkills = changedSkills + 1
+                    totalXP = totalXP + grant
+                end
             end
         end
     end

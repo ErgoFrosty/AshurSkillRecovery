@@ -10,6 +10,9 @@ function isServer() return false end
 function getTimestampMs() return 1000 end
 function getTimestamp() return 1 end
 function ZombRand() return 42 end
+function addXpNoMultiplier(playerObj, targetPerk, amount)
+    playerObj:getXp():AddXPNoMultiplier(targetPerk, amount)
+end
 
 local parent = { getId = function() return "PhysicalCategory" end }
 
@@ -88,6 +91,7 @@ end
 
 local ASR = require "AshurSkillRecovery/Core"
 local Journal = require "AshurSkillRecovery/Journal"
+ASR.addXpNoMultiplier = addXpNoMultiplier
 
 local emptyJournal = journal()
 emptyJournal.modData.AshurSkillRecovery = {
@@ -153,6 +157,18 @@ assert(thirdRead.ok == true)
 assert(third.xp.Strength == 1050)
 assert(third.xp.Sprinting == 400)
 assert(third.recipes.LearnedFromItem == true)
+
+local failedRestore = player({ Strength = 0, Sprinting = 0 }, { LearnedFromItem = true }, "failed")
+ASR.captureBaseline(failedRestore)
+local savedAddXpNoMultiplier = addXpNoMultiplier
+local savedASRAddXpNoMultiplier = ASR.addXpNoMultiplier
+addXpNoMultiplier = nil
+ASR.addXpNoMultiplier = nil
+local failedResult = Journal.read(failedRestore, item)
+assert(failedResult.ok == false)
+assert(failedRestore.xp.Strength == 0)
+addXpNoMultiplier = savedAddXpNoMultiplier
+ASR.addXpNoMultiplier = savedASRAddXpNoMultiplier
 
 local recipientWithOwnBonus = player({ Strength = 225, Sprinting = 0 }, {}, "bonus")
 ASR.captureBaseline(recipientWithOwnBonus)
