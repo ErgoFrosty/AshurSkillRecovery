@@ -33,8 +33,6 @@ option AshurSkillRecovery.RecordFirstAid { type = boolean, default = true, page 
 option AshurSkillRecovery.RecoverFirstAid { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFirstAid, }
 option AshurSkillRecovery.RecordFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFishing, }
 option AshurSkillRecovery.RecoverFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFishing, }
-option AshurSkillRecovery.RecordFitness { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFitness, }
-option AshurSkillRecovery.RecoverFitness { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFitness, }
 option AshurSkillRecovery.RecordFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFlintKnapping, }
 option AshurSkillRecovery.RecoverFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFlintKnapping, }
 option AshurSkillRecovery.RecordForaging { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordForaging, }
@@ -73,8 +71,6 @@ option AshurSkillRecovery.RecordSpear { type = boolean, default = true, page = A
 option AshurSkillRecovery.RecoverSpear { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSpear, }
 option AshurSkillRecovery.RecordSprinting { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordSprinting, }
 option AshurSkillRecovery.RecoverSprinting { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSprinting, }
-option AshurSkillRecovery.RecordStrength { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordStrength, }
-option AshurSkillRecovery.RecoverStrength { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverStrength, }
 option AshurSkillRecovery.RecordTailoring { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordTailoring, }
 option AshurSkillRecovery.RecoverTailoring { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverTailoring, }
 option AshurSkillRecovery.RecordTracking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordTracking, }

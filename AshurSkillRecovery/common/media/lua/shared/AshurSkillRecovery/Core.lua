@@ -273,19 +273,19 @@ end
 function ASR.perkRecoveryEnabled(perk)
     if not perk then return false end
     local perkId = perk:getId()
-    local legacy = (perkId == "Fitness" or perkId == "Strength")
-        and ASR.getOption("RecoverPassiveSkills", true)
-        or true
-    return ASR.getOption("Recover" .. perkId, legacy) == true
+    if perkId == "Fitness" or perkId == "Strength" then
+        return ASR.getOption("RecoverPassiveSkills", true) == true
+    end
+    return ASR.getOption("Recover" .. perkId, true) == true
 end
 
 function ASR.perkRecordingEnabled(perk)
     if not perk then return false end
     local perkId = perk:getId()
-    local legacy = (perkId == "Fitness" or perkId == "Strength")
-        and ASR.getOption("RecoverPassiveSkills", true)
-        or true
-    return ASR.getOption("Record" .. perkId, legacy) == true
+    if perkId == "Fitness" or perkId == "Strength" then
+        return ASR.getOption("RecoverPassiveSkills", true) == true
+    end
+    return ASR.getOption("Record" .. perkId, true) == true
 end
 
 function ASR.calculateEarnedXP(playerObj)

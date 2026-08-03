@@ -51,14 +51,20 @@ local function migrateData(item, data, playerObj)
     return data
 end
 
+local function canMutateJournal()
+    return not (isClient and isClient())
+end
+
 local function validateData(item, allowCreate, playerObj)
     if not ASR.isJournal(item) then return nil, "UI_ASR_InvalidJournal" end
     local data = ASR.getJournalData(item)
     if not data and allowCreate then data = createData(item, playerObj) end
     if not data then return nil, "UI_ASR_EmptyJournal" end
-    if data.schemaVersion == 1 then data = migrateData(item, data, playerObj) end
+    if data.schemaVersion == 1 and canMutateJournal() then
+        data = migrateData(item, data, playerObj)
+    end
     if not data then return nil, "UI_ASR_OwnerUnavailable" end
-    if data.schemaVersion ~= ASR.SCHEMA_VERSION then
+    if data.schemaVersion ~= 1 and data.schemaVersion ~= ASR.SCHEMA_VERSION then
         return nil, "UI_ASR_IncompatibleJournal"
     end
     if type(data.earnedXP) ~= "table" or type(data.recipes) ~= "table" then
@@ -73,22 +79,12 @@ local function validateOwner(playerObj, item, allowCreate)
     local ownerId = ASR.getPlayerOwnerId(playerObj)
     if not ownerId then return nil, "UI_ASR_OwnerUnavailable" end
     if data.ownerId ~= ownerId then return nil, "UI_ASR_NotJournalOwner" end
+    if canMutateJournal() then setJournalName(item, playerObj) end
     return data, nil
 end
 
 local function hasOtherOwnedJournal(playerObj, item)
-    local inventory = playerObj and playerObj.getInventory and playerObj:getInventory()
-    local items = inventory and inventory.getAllItems and inventory:getAllItems()
-    local ownerId = ASR.getPlayerOwnerId(playerObj)
-    if not items or not items.size or not items.get or not ownerId then return false end
-    for index = 0, items:size() - 1 do
-        local candidate = items:get(index)
-        if candidate ~= item and ASR.isJournal(candidate) then
-            local data = ASR.getJournalData(candidate)
-            if data and data.ownerId == ownerId then return true end
-        end
-    end
-    return false
+    return ASR.hasOtherOwnedJournal and ASR.hasOtherOwnedJournal(playerObj, item) or false
 end
 
 local function earnedXP(playerObj)

@@ -7,6 +7,7 @@ SandboxVars = {
 }
 
 function isServer() return false end
+function isClient() return false end
 function getTimestampMs() return 1000 end
 function getTimestamp() return 1 end
 function ZombRand() return 42 end
@@ -76,16 +77,23 @@ local function player(initialXP, initialRecipes, username)
     function value:getHoursSurvived() return 0 end
     function value:getUsername() return self.username end
     function value:getFullName() return self.username end
+    function value:getPlayerNum() return 0 end
+    function value:isDead() return false end
+    function value:isAsleep() return false end
+    function value:hasTrait() return false end
     function value:isRecipeActuallyKnown(recipeId) return self.recipes[recipeId] == true end
     function value:learnRecipe(recipeId) self.recipes[recipeId] = true end
     return value
 end
 
+local nextItemId = 7
 local function journal()
-    local value = { modData = {} }
+    local value = { modData = {}, id = nextItemId }
+    nextItemId = nextItemId + 1
     function value:getFullType() return "AshurSkillRecovery.RecoveryJournal" end
     function value:getModData() return self.modData end
-    function value:getID() return 7 end
+    function value:getID() return self.id end
+    function value:getContainer() return self.container end
     function value:setName(name) self.name = name end
     return value
 end
@@ -182,11 +190,59 @@ assert(legacy.modData.AshurSkillRecovery.schemaVersion == ASR.SCHEMA_VERSION)
 assert(legacy.modData.AshurSkillRecovery.ownerId == "username:legacy-owner")
 assert(legacy.name == "Journal legacy-owner")
 
-SandboxVars.AshurSkillRecovery.RecordStrength = false
+CharacterTrait = { ILLITERATE = "Illiterate" }
+Events = { OnClientCommand = { Add = function() end } }
+local Server = require "AshurSkillRecovery/Server"
+
+local function inventory(items)
+    local value = { items = items }
+    local list = {
+        size = function() return #items end,
+        get = function(_, index) return items[index + 1] end,
+    }
+    function value:getItems() return list end
+    function value:getItemWithIDRecursiv(id)
+        for _, item in ipairs(items) do
+            if item:getID() == id then return item end
+        end
+        return nil
+    end
+    return value
+end
+
+local restartOwner = player({ Strength = 0 }, {}, "restart-owner")
+ASR.captureBaseline(restartOwner)
+restartOwner.xp.Strength = 100
+local oldJournal = journal()
+oldJournal.container = {}
+oldJournal.modData.AshurSkillRecovery = {
+    schemaVersion = ASR.SCHEMA_VERSION,
+    journalId = "persisted-before-restart",
+    ownerId = "username:restart-owner",
+    ownerName = "restart-owner",
+    revision = 1,
+    earnedXP = { Strength = 100 },
+    recipes = {},
+}
+local replacementJournal = journal()
+local restartItems = { oldJournal, replacementJournal }
+restartOwner.getInventory = function() return inventory(restartItems) end
+local serverResult = nil
+ASR.dispatchClientCommand = function(_, payload) serverResult = payload end
+ASR.commitOperation(restartOwner, { mode = "write", itemId = replacementJournal:getID() })
+assert(serverResult.ok == false)
+assert(serverResult.reason == "UI_ASR_AlreadyHasJournal")
+
+local reloadedJournal = journal()
+reloadedJournal.container = {}
+reloadedJournal.modData.AshurSkillRecovery = oldJournal.modData.AshurSkillRecovery
+oldJournal.container = nil
+restartItems = { reloadedJournal, replacementJournal }
+assert(ASR.hasOtherOwnedJournal(restartOwner, replacementJournal) == true)
+
+SandboxVars.AshurSkillRecovery.RecoverPassiveSkills = false
 assert(ASR.calculateEarnedXP(source).Strength == nil)
-SandboxVars.AshurSkillRecovery.RecordStrength = true
-SandboxVars.AshurSkillRecovery.RecoverStrength = false
 assert(Journal.previewRead(second, item) == 0)
-SandboxVars.AshurSkillRecovery.RecoverStrength = true
+SandboxVars.AshurSkillRecovery.RecoverPassiveSkills = true
 
 print("journal integration: all tests passed")
