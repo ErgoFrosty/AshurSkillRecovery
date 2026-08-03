@@ -76,16 +76,47 @@ function ASR.getPerkLevel(playerObj, perk)
     local xp = playerObj and playerObj.getXp and playerObj:getXp()
     if not xp then return nil end
 
+    local function tryGetter(fn)
+        if not fn then return nil end
+        local ok, value = pcall(fn)
+        if ok and ASR.isFiniteNumber(value) then
+            return value
+        end
+        return nil
+    end
+
     local getters = {
-        function() return perk.getLevel and perk:getLevel() end,
-        function() return xp.getPerkLevel and xp:getPerkLevel(perk) end,
-        function() return xp.getLevel and xp:getLevel(perk) end,
-        function() return xp.getXpLevel and xp:getXpLevel(perk) end,
+        function()
+            if perk.getLevel then
+                return tryGetter(function() return perk:getLevel() end)
+                    or tryGetter(function() return perk:getLevel(playerObj) end)
+            end
+            return nil
+        end,
+        function()
+            if xp.getPerkLevel then
+                return tryGetter(function() return xp:getPerkLevel(perk) end)
+            end
+            return nil
+        end,
+        function()
+            if xp.getLevel then
+                return tryGetter(function() return xp:getLevel() end)
+                    or tryGetter(function() return xp:getLevel(perk) end)
+            end
+            return nil
+        end,
+        function()
+            if xp.getXpLevel then
+                return tryGetter(function() return xp:getXpLevel(perk) end)
+            end
+            return nil
+        end,
     }
 
     for _, getter in ipairs(getters) do
-        local ok, value = pcall(getter)
-        if ok and ASR.isFiniteNumber(value) then
+        local value = getter()
+        if ASR.isFiniteNumber(value) then
             return math.max(0, math.floor(value))
         end
     end

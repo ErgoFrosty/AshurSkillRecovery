@@ -89,6 +89,19 @@ end
 local ASR = require "AshurSkillRecovery/Core"
 local Journal = require "AshurSkillRecovery/Journal"
 
+local function levelTestPlayer(initialXP, initialRecipes, username)
+    local value = player(initialXP, initialRecipes, username)
+    value.xpObject.getLevel = function(self) return value.xp.LevelProgress or 0 end
+    return value
+end
+
+local levelPerk = perk("LevelProgress", false, 32775)
+
+local levelSource = levelTestPlayer({ LevelProgress = 0 }, {}, "levelsource")
+ASR.captureBaseline(levelSource)
+levelSource.xp.LevelProgress = 2
+assert(ASR.getPerkLevel(levelSource, levelPerk) == 2)
+
 local source = player({ Strength = 225, Sprinting = 0 }, { StartingRecipe = true }, "source")
 ASR.captureBaseline(source)
 source.xp.Strength = 1275
