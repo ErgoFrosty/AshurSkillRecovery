@@ -1,4 +1,5 @@
 require "ISUI/ISInventoryPaneContextMenu"
+require "ISUI/ISTextBox"
 require "AshurSkillRecovery/RecoveryAction"
 
 local ASR = require "AshurSkillRecovery/Core"
@@ -25,6 +26,24 @@ local function queueOperation(items, playerObj, mode)
     end
 end
 
+local function renameJournal(button, playerObj, item)
+    if button.internal ~= "OK" then return end
+    local args = { itemId = item:getID(), customName = button.parent.entry:getText() }
+    if isClient() then
+        sendClientCommand(playerObj, ASR.MODULE, "rename", args)
+    elseif not isServer() and ASR.renameJournal then
+        ASR.renameJournal(playerObj, args)
+    end
+end
+
+local function promptRename(playerObj, item)
+    local data = ASR.getJournalData(item)
+    local text = data and data.customName or "Дневник восстановления"
+    local modal = ISTextBox:new(0, 0, 280, 180, getText("UI_ASR_RenamePrompt"), text, nil, renameJournal, playerObj, item)
+    modal:initialise()
+    modal:addToUIManager()
+end
+
 function Context.onFill(playerNum, context, items)
     local playerObj = getSpecificPlayer(playerNum)
     if not playerObj then return end
@@ -38,6 +57,10 @@ function Context.onFill(playerNum, context, items)
 
     ASR.ensureBaseline(playerObj)
     local unavailable = playerObj:isAsleep() or playerObj:hasTrait(CharacterTrait.ILLITERATE)
+
+    if Journal.isOwner(playerObj, journal) then
+        context:addOptionOnTop(getText("UI_ASR_RenameAction"), journal, promptRename, playerObj, journal)
+    end
 
     local writeSkills, writeRecipes, writeReason = Journal.previewWrite(playerObj, journal)
     local writeOption = context:addOptionOnTop(

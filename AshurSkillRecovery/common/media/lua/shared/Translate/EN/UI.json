@@ -18,6 +18,8 @@
   ,"UI_ASR_DataUnavailable": "Journal data is temporarily unavailable"
   ,"UI_ASR_OwnerUnavailable": "Cannot identify this journal's owner"
   ,"UI_ASR_NotJournalOwner": "Only this journal's owner can use it"
-  ,"UI_ASR_AlreadyHasJournal": "This player already has a recovery journal"
-  ,"UI_ASR_JournalName": "Journal %1"
+  ,"UI_ASR_RenameAction": "Rename recovery journal"
+  ,"UI_ASR_RenamePrompt": "Enter a journal name"
+  ,"UI_ASR_RenameSuccess": "Journal renamed: %1"
+  ,"UI_ASR_InvalidJournalName": "Journal name must contain 1 to 64 characters"
 }

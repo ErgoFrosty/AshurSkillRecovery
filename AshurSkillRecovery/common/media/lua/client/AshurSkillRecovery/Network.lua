@@ -3,7 +3,9 @@ local ASR = require "AshurSkillRecovery/Core"
 local function showResult(playerObj, args)
     if not playerObj then return end
     local message
-    if args.ok == true and args.mode == "write" then
+    if args.ok == true and args.mode == "rename" then
+        HaloTextHelper.addGoodText(playerObj, getText("UI_ASR_RenameSuccess", args.name or ""))
+    elseif args.ok == true and args.mode == "write" then
         message = getText("UI_ASR_WriteSuccess", tostring(args.skills or 0), tostring(args.recipes or 0))
         HaloTextHelper.addGoodText(playerObj, message)
     elseif args.ok == true then

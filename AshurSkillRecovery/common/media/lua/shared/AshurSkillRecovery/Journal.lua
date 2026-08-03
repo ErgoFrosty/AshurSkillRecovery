@@ -4,6 +4,8 @@ local RecoveryMath = ASR.Math
 local Journal = {}
 local MAX_RECIPES = 4096
 local MAX_RECIPE_ID_LENGTH = 256
+local MAX_CUSTOM_NAME_LENGTH = 64
+local DEFAULT_CUSTOM_NAME = "Дневник восстановления"
 local logError = ASR.logError or function(...) print("[AshurSkillRecovery] ERROR:", ...) end
 
 local function newJournalId(item)
@@ -12,12 +14,18 @@ local function newJournalId(item)
     return "ASR:" .. tostring(stamp) .. ":" .. tostring(random) .. ":" .. tostring(item:getID())
 end
 
-local function setJournalName(item, playerObj)
-    local name = ASR.getPlayerDisplayName(playerObj)
-    if name ~= "" and item.setName then
-        local label = getText and getText("UI_ASR_JournalName", name) or ("Journal " .. name)
-        pcall(function() item:setName(label) end)
-    end
+local function applyJournalName(item, data)
+    if item.setName then pcall(function() item:setName(data.customName) end) end
+end
+
+local function normalizeCustomName(value)
+    if type(value) ~= "string" or value == "" or #value > MAX_CUSTOM_NAME_LENGTH then return nil end
+    return value
+end
+
+local function ensureCustomName(item, data)
+    data.customName = normalizeCustomName(data.customName) or DEFAULT_CUSTOM_NAME
+    applyJournalName(item, data)
 end
 
 local function createData(item, playerObj)
@@ -29,12 +37,13 @@ local function createData(item, playerObj)
         journalId = newJournalId(item),
         ownerId = ownerId,
         ownerName = ASR.getPlayerDisplayName(playerObj),
+        customName = DEFAULT_CUSTOM_NAME,
         revision = 0,
         earnedXP = {},
         recipes = {},
     }
     modData[ASR.ITEM_DATA_KEY] = data
-    setJournalName(item, playerObj)
+    applyJournalName(item, data)
     return data
 end
 
@@ -47,7 +56,7 @@ local function migrateData(item, data, playerObj)
     data.ownerId = ownerId
     data.ownerName = ASR.getPlayerDisplayName(playerObj)
     data.revision = math.max(0, math.floor(tonumber(data.revision) or 0))
-    setJournalName(item, playerObj)
+    ensureCustomName(item, data)
     return data
 end
 
@@ -70,6 +79,7 @@ local function validateData(item, allowCreate, playerObj)
     if type(data.earnedXP) ~= "table" or type(data.recipes) ~= "table" then
         return nil, "UI_ASR_CorruptJournal"
     end
+    if canMutateJournal() then ensureCustomName(item, data) end
     return data, nil
 end
 
@@ -79,12 +89,7 @@ local function validateOwner(playerObj, item, allowCreate)
     local ownerId = ASR.getPlayerOwnerId(playerObj)
     if not ownerId then return nil, "UI_ASR_OwnerUnavailable" end
     if data.ownerId ~= ownerId then return nil, "UI_ASR_NotJournalOwner" end
-    if canMutateJournal() then setJournalName(item, playerObj) end
     return data, nil
-end
-
-local function hasOtherOwnedJournal(playerObj, item)
-    return ASR.hasOtherOwnedJournal and ASR.hasOtherOwnedJournal(playerObj, item) or false
 end
 
 local function earnedXP(playerObj)
@@ -134,8 +139,6 @@ function Journal.previewWrite(playerObj, item)
         if reason then return nil, nil, reason end
     elseif not ASR.getPlayerOwnerId(playerObj) then
         return nil, nil, "UI_ASR_OwnerUnavailable"
-    elseif hasOtherOwnedJournal(playerObj, item) then
-        return nil, nil, "UI_ASR_AlreadyHasJournal"
     end
     local saved = existing and type(existing.earnedXP) == "table" and existing.earnedXP or {}
     local savedRecipes = existing and type(existing.recipes) == "table" and existing.recipes or {}
@@ -205,10 +208,6 @@ function Journal.write(playerObj, item)
         return { ok = false, reason = "UI_ASR_NothingToWrite" }
     end
 
-    if not ASR.getJournalData(item) and hasOtherOwnedJournal(playerObj, item) then
-        return { ok = false, reason = "UI_ASR_AlreadyHasJournal" }
-    end
-
     local data, reason = validateOwner(playerObj, item, true)
     if not data then return { ok = false, reason = reason } end
 
@@ -241,6 +240,24 @@ function Journal.write(playerObj, item)
         recipes = recipeChanges,
         revision = data.revision,
     }
+end
+
+function Journal.rename(playerObj, item, customName)
+    local data, reason = validateOwner(playerObj, item, false)
+    if not data then return { ok = false, reason = reason } end
+    local normalized = normalizeCustomName(customName)
+    if not normalized then return { ok = false, reason = "UI_ASR_InvalidJournalName" } end
+
+    data.customName = normalized
+    data.revision = math.max(0, math.floor(tonumber(data.revision) or 0)) + 1
+    applyJournalName(item, data)
+    syncJournal(playerObj, item)
+    return { ok = true, name = normalized, revision = data.revision }
+end
+
+function Journal.isOwner(playerObj, item)
+    local data = validateOwner(playerObj, item, false)
+    return data ~= nil
 end
 
 function Journal.read(playerObj, item)

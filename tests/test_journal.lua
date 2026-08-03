@@ -129,6 +129,8 @@ source.recipes.LearnedFromItem = true
 local item = journal()
 local writeResult = Journal.write(source, item)
 assert(writeResult.ok == true)
+assert(item.modData.AshurSkillRecovery.customName == "Дневник восстановления")
+assert(item.name == "Дневник восстановления")
 assert(item.modData.AshurSkillRecovery.earnedXP.Strength == 1050)
 assert(item.modData.AshurSkillRecovery.earnedXP.Sprinting == 400)
 assert(item.modData.AshurSkillRecovery.recipes.LearnedFromItem == true)
@@ -181,14 +183,15 @@ assert(foreignRead.reason == "UI_ASR_NotJournalOwner")
 
 local legacy = journal()
 legacy.modData.AshurSkillRecovery = {
-    schemaVersion = 1, earnedXP = { Strength = 100 }, recipes = {},
+    schemaVersion = 1, customName = "Старый дневник", earnedXP = { Strength = 100 }, recipes = {},
 }
 local legacyOwner = player({ Strength = 0 }, {}, "legacy-owner")
 ASR.captureBaseline(legacyOwner)
 assert(Journal.read(legacyOwner, legacy).ok == true)
 assert(legacy.modData.AshurSkillRecovery.schemaVersion == ASR.SCHEMA_VERSION)
 assert(legacy.modData.AshurSkillRecovery.ownerId == "username:legacy-owner")
-assert(legacy.name == "Journal legacy-owner")
+assert(legacy.modData.AshurSkillRecovery.customName == "Старый дневник")
+assert(legacy.name == "Старый дневник")
 
 CharacterTrait = { ILLITERATE = "Illiterate" }
 Events = { OnClientCommand = { Add = function() end } }
@@ -210,35 +213,39 @@ local function inventory(items)
     return value
 end
 
-local restartOwner = player({ Strength = 0 }, {}, "restart-owner")
-ASR.captureBaseline(restartOwner)
-restartOwner.xp.Strength = 100
-local oldJournal = journal()
-oldJournal.container = {}
-oldJournal.modData.AshurSkillRecovery = {
-    schemaVersion = ASR.SCHEMA_VERSION,
-    journalId = "persisted-before-restart",
-    ownerId = "username:restart-owner",
-    ownerName = "restart-owner",
-    revision = 1,
-    earnedXP = { Strength = 100 },
-    recipes = {},
-}
-local replacementJournal = journal()
-local restartItems = { oldJournal, replacementJournal }
-restartOwner.getInventory = function() return inventory(restartItems) end
+local owner = player({ Strength = 0 }, {}, "owner")
+ASR.captureBaseline(owner)
+owner.xp.Strength = 100
+local secondJournal = journal()
+local ownerItems = { item, secondJournal }
+owner.getInventory = function() return inventory(ownerItems) end
 local serverResult = nil
 ASR.dispatchClientCommand = function(_, payload) serverResult = payload end
-ASR.commitOperation(restartOwner, { mode = "write", itemId = replacementJournal:getID() })
-assert(serverResult.ok == false)
-assert(serverResult.reason == "UI_ASR_AlreadyHasJournal")
+ASR.commitOperation(owner, { mode = "write", itemId = secondJournal:getID() })
+assert(serverResult.ok == true)
+assert(secondJournal.modData.AshurSkillRecovery.journalId ~= item.modData.AshurSkillRecovery.journalId)
+assert(secondJournal.modData.AshurSkillRecovery.ownerId == "username:owner")
+
+ASR.renameJournal(owner, { itemId = secondJournal:getID(), customName = "Запасной дневник" })
+assert(serverResult.ok == true)
+assert(secondJournal.modData.AshurSkillRecovery.customName == "Запасной дневник")
+assert(secondJournal.name == "Запасной дневник")
 
 local reloadedJournal = journal()
-reloadedJournal.container = {}
-reloadedJournal.modData.AshurSkillRecovery = oldJournal.modData.AshurSkillRecovery
-oldJournal.container = nil
-restartItems = { reloadedJournal, replacementJournal }
-assert(ASR.hasOtherOwnedJournal(restartOwner, replacementJournal) == true)
+reloadedJournal.modData.AshurSkillRecovery = secondJournal.modData.AshurSkillRecovery
+local restartItems = { reloadedJournal }
+owner.getInventory = function() return inventory(restartItems) end
+ASR.renameJournal(owner, { itemId = reloadedJournal:getID(), customName = "После перезапуска" })
+assert(serverResult.ok == true)
+assert(reloadedJournal.modData.AshurSkillRecovery.customName == "После перезапуска")
+
+foreign.getInventory = function() return inventory({ item }) end
+ASR.renameJournal(foreign, { itemId = item:getID(), customName = "Чужой дневник" })
+assert(serverResult.ok == false)
+assert(serverResult.reason == "UI_ASR_NotJournalOwner")
+ASR.commitOperation(foreign, { mode = "write", itemId = item:getID() })
+assert(serverResult.ok == false)
+assert(serverResult.reason == "UI_ASR_NotJournalOwner")
 
 SandboxVars.AshurSkillRecovery.RecoverPassiveSkills = false
 assert(ASR.calculateEarnedXP(source).Strength == nil)

@@ -18,6 +18,8 @@
   ,"UI_ASR_DataUnavailable": "Данные дневника временно недоступны"
   ,"UI_ASR_OwnerUnavailable": "Не удалось определить владельца дневника"
   ,"UI_ASR_NotJournalOwner": "Дневник может использовать только его владелец"
-  ,"UI_ASR_AlreadyHasJournal": "У этого игрока уже есть дневник восстановления"
-  ,"UI_ASR_JournalName": "Дневник %1"
+  ,"UI_ASR_RenameAction": "Переименовать дневник восстановления"
+  ,"UI_ASR_RenamePrompt": "Введите название дневника"
+  ,"UI_ASR_RenameSuccess": "Дневник переименован: %1"
+  ,"UI_ASR_InvalidJournalName": "Название дневника должно содержать от 1 до 64 символов"
 }
