@@ -54,13 +54,51 @@ def main() -> None:
         path = MOD / "common" / "media" / "lua" / "shared" / "Translate" / language / "Sandbox.json"
         translations.append(json.loads(path.read_text(encoding="utf-8")))
     for perk_id in configurable_perks:
-        for direction in ("Record", "Recover"):
-            option = f"{direction}{perk_id}"
-            assert f"option AshurSkillRecovery.{option}" in sandbox, f"missing sandbox option: {option}"
-            for translation in translations:
-                assert f"Sandbox_{option}" in translation, f"missing sandbox translation: {option}"
-    for obsolete_id in ("Carpentry", "FirstAid", "Foraging", "PassiveSkills"):
-        assert f"Record{obsolete_id}" not in sandbox and f"Recover{obsolete_id}" not in sandbox
+        option = f"Enable{perk_id}"
+        assert f"option AshurSkillRecovery.{option}" in sandbox, f"missing sandbox option: {option}"
+        for translation in translations:
+            assert f"Sandbox_{option}" in translation, f"missing sandbox translation: {option}"
+        assert f"option AshurSkillRecovery.Record{perk_id}" not in sandbox
+        assert f"option AshurSkillRecovery.Recover{perk_id}" not in sandbox
+
+    vanilla_ru_names = {
+        "Aiming": "Точность", "Axe": "Топоры", "Blacksmith": "Кузнечное дело",
+        "Blunt": "Длинное дробящее", "Butchering": "Мясницкое дело", "Carving": "Резьба",
+        "Cooking": "Кулинария", "Doctor": "Медицина", "Electricity": "Электрика",
+        "Farming": "Фермерство", "Fishing": "Рыболовство", "Fitness": "Фитнес",
+        "FlintKnapping": "Камнеобработка", "Glassmaking": "Стеклоделие",
+        "Husbandry": "Уход за животными", "Lightfoot": "Лёгкий шаг",
+        "LongBlade": "Длинное режущее", "Maintenance": "Прочность",
+        "Masonry": "Каменная кладка", "Mechanics": "Автомеханика",
+        "MetalWelding": "Газосварка", "Nimble": "Проворность",
+        "PlantScavenging": "Собирательство", "Pottery": "Гончарное дело",
+        "Reloading": "Перезарядка", "SmallBlade": "Короткое режущее",
+        "SmallBlunt": "Короткое дробящее", "Sneak": "Скрытность", "Spear": "Копья",
+        "Sprinting": "Бег", "Strength": "Сила", "Tailoring": "Шитьё",
+        "Tracking": "Выслеживание", "Trapping": "Звероловство", "Woodwork": "Плотничество",
+    }
+    ru_sandbox = translations[1]
+    for perk_id, vanilla_name in vanilla_ru_names.items():
+        assert ru_sandbox[f"Sandbox_Enable{perk_id}"] == vanilla_name
+
+    vanilla_en_names = {
+        "Aiming": "Aiming", "Axe": "Axe", "Blacksmith": "Blacksmithing",
+        "Blunt": "Long Blunt", "Butchering": "Butchering", "Carving": "Carving",
+        "Cooking": "Cooking", "Doctor": "First Aid", "Electricity": "Electrical",
+        "Farming": "Agriculture", "Fishing": "Fishing", "Fitness": "Fitness",
+        "FlintKnapping": "Knapping", "Glassmaking": "Glassmaking",
+        "Husbandry": "Animal Care", "Lightfoot": "Lightfooted",
+        "LongBlade": "Long Blade", "Maintenance": "Maintenance", "Masonry": "Masonry",
+        "Mechanics": "Mechanics", "MetalWelding": "Welding", "Nimble": "Nimble",
+        "PlantScavenging": "Foraging", "Pottery": "Pottery", "Reloading": "Reloading",
+        "SmallBlade": "Short Blade", "SmallBlunt": "Short Blunt", "Sneak": "Sneaking",
+        "Spear": "Spear", "Sprinting": "Running", "Strength": "Strength",
+        "Tailoring": "Tailoring", "Tracking": "Tracking", "Trapping": "Trapping",
+        "Woodwork": "Carpentry",
+    }
+    en_sandbox = translations[0]
+    for perk_id, vanilla_name in vanilla_en_names.items():
+        assert en_sandbox[f"Sandbox_Enable{perk_id}"] == vanilla_name
 
     context = (MOD / "common" / "media" / "lua" / "client" / "AshurSkillRecovery" / "Context.lua").read_text(encoding="utf-8")
     assert "local function promptRename(item, playerObj)" in context

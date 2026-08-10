@@ -2,10 +2,8 @@ SandboxVars = {
     AshurSkillRecovery = {
         RecoveryPercentage = 100,
         RecoverRecipes = true,
-        RecordFitness = true,
-        RecoverFitness = true,
-        RecordStrength = true,
-        RecoverStrength = true,
+        EnableFitness = true,
+        EnableStrength = true,
     },
 }
 
@@ -360,18 +358,14 @@ ASR.commitOperation(foreign, { mode = "write", itemId = item:getID() })
 assert(serverResult.ok == false)
 assert(serverResult.reason == "UI_ASR_NotJournalOwner")
 
-SandboxVars.AshurSkillRecovery.RecordFitness = false
-SandboxVars.AshurSkillRecovery.RecoverFitness = false
-SandboxVars.AshurSkillRecovery.RecordStrength = false
-SandboxVars.AshurSkillRecovery.RecoverStrength = false
+SandboxVars.AshurSkillRecovery.EnableFitness = false
+SandboxVars.AshurSkillRecovery.EnableStrength = false
 assert(ASR.perkRecordingEnabled(fitness) == false)
 assert(ASR.perkRecoveryEnabled(fitness) == false)
 assert(ASR.perkRecordingEnabled(strength) == false)
 assert(ASR.perkRecoveryEnabled(strength) == false)
 assert(ASR.calculateEarnedXP(source).Strength == nil)
-SandboxVars.AshurSkillRecovery.RecordFitness = true
-SandboxVars.AshurSkillRecovery.RecoverFitness = true
-SandboxVars.AshurSkillRecovery.RecordStrength = true
-SandboxVars.AshurSkillRecovery.RecoverStrength = true
+SandboxVars.AshurSkillRecovery.EnableFitness = true
+SandboxVars.AshurSkillRecovery.EnableStrength = true
 
 print("journal integration: all tests passed")

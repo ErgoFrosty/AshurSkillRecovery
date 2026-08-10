@@ -10,7 +10,7 @@ unless marked otherwise.
   values are excluded.
 - Record and restore partial progress inside a level.
 - Recipient has a different starting bonus: verify its own baseline is kept.
-- Independently enable and disable Record/Restore for Fitness and Strength.
+- Independently enable and disable the combined Fitness and Strength switches.
 - Recovery percentage 0, 1, 50, 99, and 100.
 - Read twice in the same life: the second read grants zero.
 - Read, die without writing, then read with a third character: recovery works.
@@ -50,8 +50,7 @@ unless marked otherwise.
   duplicated.
 - Disable recipe recovery: neither writing nor reading transfers recipes or
   completed recipe-magazine markers.
-- Disable Record for each vanilla skill: new XP for that skill is not written.
-- Disable Restore for each vanilla skill: saved XP for that skill is not added.
+- Disable each vanilla skill: its XP is neither written nor restored.
 - Verify First Aid (`Doctor`), Carpentry (`Woodwork`), and Foraging
   (`PlantScavenging`) switches affect their actual Build 42 perks.
 - Set action time below the old 300-unit floor (for example 10): the configured

@@ -218,13 +218,13 @@ end
 function ASR.perkRecoveryEnabled(perk)
     if not perk then return false end
     local perkId = perk:getId()
-    return ASR.getOption("Recover" .. perkId, true) == true
+    return ASR.getOption("Enable" .. perkId, true) == true
 end
 
 function ASR.perkRecordingEnabled(perk)
     if not perk then return false end
     local perkId = perk:getId()
-    return ASR.getOption("Record" .. perkId, true) == true
+    return ASR.getOption("Enable" .. perkId, true) == true
 end
 
 function ASR.calculateEarnedXP(playerObj)

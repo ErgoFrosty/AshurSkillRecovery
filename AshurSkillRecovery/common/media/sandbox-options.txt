@@ -6,84 +6,41 @@ option AshurSkillRecovery.RecoveryPercentage
 option AshurSkillRecovery.RecoverRecipes
 { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverRecipes, }
 
-option AshurSkillRecovery.RecordFitness
-{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFitness, }
-
-option AshurSkillRecovery.RecoverFitness
-{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFitness, }
-
-option AshurSkillRecovery.RecordStrength
-{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecordStrength, }
-
-option AshurSkillRecovery.RecoverStrength
-{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverStrength, }
-
-option AshurSkillRecovery.RecordAiming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordAiming, }
-option AshurSkillRecovery.RecoverAiming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverAiming, }
-option AshurSkillRecovery.RecordAxe { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordAxe, }
-option AshurSkillRecovery.RecoverAxe { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverAxe, }
-option AshurSkillRecovery.RecordBlacksmith { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordBlacksmith, }
-option AshurSkillRecovery.RecoverBlacksmith { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverBlacksmith, }
-option AshurSkillRecovery.RecordBlunt { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordBlunt, }
-option AshurSkillRecovery.RecoverBlunt { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverBlunt, }
-option AshurSkillRecovery.RecordButchering { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordButchering, }
-option AshurSkillRecovery.RecoverButchering { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverButchering, }
-option AshurSkillRecovery.RecordCarving { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordCarving, }
-option AshurSkillRecovery.RecoverCarving { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverCarving, }
-option AshurSkillRecovery.RecordCooking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordCooking, }
-option AshurSkillRecovery.RecoverCooking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverCooking, }
-option AshurSkillRecovery.RecordDoctor { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordDoctor, }
-option AshurSkillRecovery.RecoverDoctor { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverDoctor, }
-option AshurSkillRecovery.RecordElectricity { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordElectricity, }
-option AshurSkillRecovery.RecoverElectricity { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverElectricity, }
-option AshurSkillRecovery.RecordFarming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFarming, }
-option AshurSkillRecovery.RecoverFarming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFarming, }
-option AshurSkillRecovery.RecordFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFishing, }
-option AshurSkillRecovery.RecoverFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFishing, }
-option AshurSkillRecovery.RecordFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFlintKnapping, }
-option AshurSkillRecovery.RecoverFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFlintKnapping, }
-option AshurSkillRecovery.RecordGlassmaking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordGlassmaking, }
-option AshurSkillRecovery.RecoverGlassmaking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverGlassmaking, }
-option AshurSkillRecovery.RecordHusbandry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordHusbandry, }
-option AshurSkillRecovery.RecoverHusbandry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverHusbandry, }
-option AshurSkillRecovery.RecordLightfoot { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordLightfoot, }
-option AshurSkillRecovery.RecoverLightfoot { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverLightfoot, }
-option AshurSkillRecovery.RecordLongBlade { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordLongBlade, }
-option AshurSkillRecovery.RecoverLongBlade { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverLongBlade, }
-option AshurSkillRecovery.RecordMaintenance { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordMaintenance, }
-option AshurSkillRecovery.RecoverMaintenance { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverMaintenance, }
-option AshurSkillRecovery.RecordMasonry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordMasonry, }
-option AshurSkillRecovery.RecoverMasonry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverMasonry, }
-option AshurSkillRecovery.RecordMechanics { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordMechanics, }
-option AshurSkillRecovery.RecoverMechanics { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverMechanics, }
-option AshurSkillRecovery.RecordMetalWelding { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordMetalWelding, }
-option AshurSkillRecovery.RecoverMetalWelding { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverMetalWelding, }
-option AshurSkillRecovery.RecordNimble { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordNimble, }
-option AshurSkillRecovery.RecoverNimble { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverNimble, }
-option AshurSkillRecovery.RecordPlantScavenging { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordPlantScavenging, }
-option AshurSkillRecovery.RecoverPlantScavenging { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverPlantScavenging, }
-option AshurSkillRecovery.RecordPottery { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordPottery, }
-option AshurSkillRecovery.RecoverPottery { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverPottery, }
-option AshurSkillRecovery.RecordReloading { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordReloading, }
-option AshurSkillRecovery.RecoverReloading { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverReloading, }
-option AshurSkillRecovery.RecordSmallBlade { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordSmallBlade, }
-option AshurSkillRecovery.RecoverSmallBlade { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSmallBlade, }
-option AshurSkillRecovery.RecordSmallBlunt { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordSmallBlunt, }
-option AshurSkillRecovery.RecoverSmallBlunt { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSmallBlunt, }
-option AshurSkillRecovery.RecordSneak { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordSneak, }
-option AshurSkillRecovery.RecoverSneak { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSneak, }
-option AshurSkillRecovery.RecordSpear { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordSpear, }
-option AshurSkillRecovery.RecoverSpear { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSpear, }
-option AshurSkillRecovery.RecordSprinting { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordSprinting, }
-option AshurSkillRecovery.RecoverSprinting { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverSprinting, }
-option AshurSkillRecovery.RecordTailoring { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordTailoring, }
-option AshurSkillRecovery.RecoverTailoring { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverTailoring, }
-option AshurSkillRecovery.RecordTracking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordTracking, }
-option AshurSkillRecovery.RecoverTracking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverTracking, }
-option AshurSkillRecovery.RecordTrapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordTrapping, }
-option AshurSkillRecovery.RecoverTrapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverTrapping, }
-option AshurSkillRecovery.RecordWoodwork { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordWoodwork, }
-option AshurSkillRecovery.RecoverWoodwork { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverWoodwork, }
+option AshurSkillRecovery.EnableFitness { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableFitness, }
+option AshurSkillRecovery.EnableStrength { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableStrength, }
+option AshurSkillRecovery.EnableAiming { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableAiming, }
+option AshurSkillRecovery.EnableAxe { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableAxe, }
+option AshurSkillRecovery.EnableBlacksmith { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableBlacksmith, }
+option AshurSkillRecovery.EnableBlunt { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableBlunt, }
+option AshurSkillRecovery.EnableButchering { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableButchering, }
+option AshurSkillRecovery.EnableCarving { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableCarving, }
+option AshurSkillRecovery.EnableCooking { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableCooking, }
+option AshurSkillRecovery.EnableDoctor { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableDoctor, }
+option AshurSkillRecovery.EnableElectricity { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableElectricity, }
+option AshurSkillRecovery.EnableFarming { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableFarming, }
+option AshurSkillRecovery.EnableFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableFishing, }
+option AshurSkillRecovery.EnableFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableFlintKnapping, }
+option AshurSkillRecovery.EnableGlassmaking { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableGlassmaking, }
+option AshurSkillRecovery.EnableHusbandry { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableHusbandry, }
+option AshurSkillRecovery.EnableLightfoot { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableLightfoot, }
+option AshurSkillRecovery.EnableLongBlade { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableLongBlade, }
+option AshurSkillRecovery.EnableMaintenance { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableMaintenance, }
+option AshurSkillRecovery.EnableMasonry { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableMasonry, }
+option AshurSkillRecovery.EnableMechanics { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableMechanics, }
+option AshurSkillRecovery.EnableMetalWelding { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableMetalWelding, }
+option AshurSkillRecovery.EnableNimble { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableNimble, }
+option AshurSkillRecovery.EnablePlantScavenging { type = boolean, default = true, page = AshurSkillRecovery, translation = EnablePlantScavenging, }
+option AshurSkillRecovery.EnablePottery { type = boolean, default = true, page = AshurSkillRecovery, translation = EnablePottery, }
+option AshurSkillRecovery.EnableReloading { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableReloading, }
+option AshurSkillRecovery.EnableSmallBlade { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableSmallBlade, }
+option AshurSkillRecovery.EnableSmallBlunt { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableSmallBlunt, }
+option AshurSkillRecovery.EnableSneak { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableSneak, }
+option AshurSkillRecovery.EnableSpear { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableSpear, }
+option AshurSkillRecovery.EnableSprinting { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableSprinting, }
+option AshurSkillRecovery.EnableTailoring { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableTailoring, }
+option AshurSkillRecovery.EnableTracking { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableTracking, }
+option AshurSkillRecovery.EnableTrapping { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableTrapping, }
+option AshurSkillRecovery.EnableWoodwork { type = boolean, default = true, page = AshurSkillRecovery, translation = EnableWoodwork, }
 
 option AshurSkillRecovery.WriteActionTime
 { type = integer, min = 10, max = 5000, default = 300, page = AshurSkillRecovery, translation = WriteActionTime, }

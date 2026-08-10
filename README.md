@@ -4,9 +4,6 @@ An owner-bound recovery journal for Project Zomboid Build 42.20. It records
 skill XP and recipes learned after character creation and lets another
 character belonging to the same player restore that progress.
 
-This repository is the development source. Test builds use the mod ID
-`AshurSkillRecoveryDev`; release builds use `AshurSkillRecovery`.
-
 Russian documentation: [README.ru.md](README.ru.md).
 
 ## How it works
@@ -57,10 +54,9 @@ The mod records an explicit allow-list of vanilla Build 42.20 skills. Skills
 added by other mods are deliberately ignored so unknown category perks cannot
 be mistaken for recoverable player skills.
 
-Every supported vanilla skill, including Fitness and Strength, has independent
-**Record** and **Restore** checkboxes. Administrators can therefore disable
-either passive skill without affecting the other and can exclude any skill in
-either direction. First Aid uses the
+Every supported vanilla skill has one sandbox checkbox controlling both
+recording and restoration. Fitness and Strength remain separate settings, so
+either passive skill can be disabled without affecting the other. First Aid uses the
 actual Build 42 perk ID `Doctor`; Carpentry uses `Woodwork`; Foraging uses
 `PlantScavenging`.
 
@@ -81,8 +77,8 @@ restoration of both recipes and recipe-magazine history.
 
 - recovery percentage: `0–100%`;
 - record/restore learned recipes and completed recipe magazines;
-- separate record and restore switches for every supported vanilla skill,
-  including independent Fitness and Strength controls;
+- one recording/restoration switch for every supported vanilla skill, including
+  independent Fitness and Strength controls;
 - recording and recovery action durations: `10–5000` action units.
 
 All options default to enabled and the recovery percentage defaults to 100%.
@@ -100,7 +96,7 @@ not guessed or made recoverable.
 
 ## Build and tests
 
-Create a development build:
+Create the manual-install and Workshop release packages:
 
 ```powershell
 ./build.ps1
