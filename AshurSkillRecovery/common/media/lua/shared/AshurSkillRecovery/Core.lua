@@ -16,13 +16,14 @@ end
 
 local perkCache = nil
 
--- This is deliberately an allow-list.  Skills supplied by other mods are not
--- journalled, even when they have a normal Perk parent.
+-- This is deliberately an allow-list of Build 42.20 vanilla skills. Skills
+-- supplied by other mods are not journalled, even when they have a normal
+-- Perk parent.
 ASR.VANILLA_PERK_IDS = {
     Aiming = true, Axe = true, Blacksmith = true, Blunt = true, Butchering = true,
-    Carving = true, Carpentry = true, Cooking = true, Electricity = true,
-    Farming = true, FirstAid = true, Fishing = true, Fitness = true,
-    FlintKnapping = true, Foraging = true, Glassmaking = true, Husbandry = true,
+    Carving = true, Cooking = true, Doctor = true, Electricity = true,
+    Farming = true, Fishing = true, Fitness = true, FlintKnapping = true,
+    Glassmaking = true, Husbandry = true,
     Lightfoot = true, LongBlade = true, Maintenance = true, Masonry = true,
     Mechanics = true, MetalWelding = true, Nimble = true, PlantScavenging = true,
     Pottery = true, Reloading = true, SmallBlade = true, SmallBlunt = true,
@@ -130,66 +131,6 @@ function ASR.getCurrentXP(playerObj, perk)
     return math.max(0, value)
 end
 
-function ASR.getPerkLevel(playerObj, perk)
-    if not playerObj or not perk then return nil end
-    local xp = playerObj and playerObj.getXp and playerObj:getXp()
-    if not xp then return nil end
-
-    local function tryGetter(fn)
-        if not fn then return nil end
-        local ok, value = pcall(fn)
-        if ok and ASR.isFiniteNumber(value) then
-            return value
-        end
-        return nil
-    end
-
-    local getters = {
-        function()
-            if perk.getLevel then
-                return tryGetter(function() return perk:getLevel() end)
-                    or tryGetter(function() return perk:getLevel(playerObj) end)
-            end
-            return nil
-        end,
-        function()
-            if xp.getPerkLevel then
-                return tryGetter(function() return xp:getPerkLevel(perk) end)
-            end
-            return nil
-        end,
-        function()
-            if xp.getLevel then
-                return tryGetter(function() return xp:getLevel() end)
-                    or tryGetter(function() return xp:getLevel(perk) end)
-            end
-            return nil
-        end,
-        function()
-            if xp.getXpLevel then
-                return tryGetter(function() return xp:getXpLevel(perk) end)
-            end
-            return nil
-        end,
-    }
-
-    for _, getter in ipairs(getters) do
-        local value = getter()
-        if ASR.isFiniteNumber(value) then
-            return math.max(0, math.floor(value))
-        end
-    end
-    return nil
-end
-
-function ASR.getLevelXP(perk, level)
-    if not perk then return nil end
-    local resolvedLevel = math.max(0, math.floor(tonumber(level) or 0))
-    local ok, total = pcall(function() return perk:getTotalXpForLevel(resolvedLevel) end)
-    if not ok or not ASR.isFiniteNumber(total) then return nil end
-    return math.max(0, total)
-end
-
 local function knownRecipeSet(playerObj)
     local recipes = {}
     local known = playerObj:getKnownRecipes()
@@ -218,14 +159,12 @@ function ASR.captureBaseline(playerObj)
         lifeId = newLifeId(playerObj),
         capturedAtHours = playerObj:getHoursSurvived() or 0,
         baselineXP = {},
-        baselineLevels = {},
         baselineRecipes = knownRecipeSet(playerObj),
     }
 
     for _, perk in ipairs(ASR.getPerks()) do
         local perkId = perk:getId()
         state.baselineXP[perkId] = ASR.getCurrentXP(playerObj, perk)
-        state.baselineLevels[perkId] = ASR.getPerkLevel(playerObj, perk)
     end
 
     root[ASR.PLAYER_DATA_KEY] = state
@@ -247,19 +186,12 @@ function ASR.ensureBaseline(playerObj)
     state.baselineRecipes = type(state.baselineRecipes) == "table"
         and state.baselineRecipes
         or knownRecipeSet(playerObj)
-    state.baselineLevels = type(state.baselineLevels) == "table"
-        and state.baselineLevels
-        or {}
-
-    -- A perk added by another mod after this life began is treated
-    -- conservatively: its current XP becomes the baseline on first sight.
+    -- Missing entries (for example after a schema/game update) are initialized
+    -- conservatively from the current XP instead of creating free progress.
     for _, perk in ipairs(ASR.getPerks()) do
         local perkId = perk:getId()
         if not ASR.isFiniteNumber(state.baselineXP[perkId]) then
             state.baselineXP[perkId] = ASR.getCurrentXP(playerObj, perk)
-        end
-        if not ASR.isFiniteNumber(state.baselineLevels[perkId]) then
-            state.baselineLevels[perkId] = ASR.getPerkLevel(playerObj, perk)
         end
     end
     return state
@@ -273,18 +205,12 @@ end
 function ASR.perkRecoveryEnabled(perk)
     if not perk then return false end
     local perkId = perk:getId()
-    if perkId == "Fitness" or perkId == "Strength" then
-        return ASR.getOption("RecoverPassiveSkills", true) == true
-    end
     return ASR.getOption("Recover" .. perkId, true) == true
 end
 
 function ASR.perkRecordingEnabled(perk)
     if not perk then return false end
     local perkId = perk:getId()
-    if perkId == "Fitness" or perkId == "Strength" then
-        return ASR.getOption("RecoverPassiveSkills", true) == true
-    end
     return ASR.getOption("Record" .. perkId, true) == true
 end
 
@@ -297,22 +223,7 @@ function ASR.calculateEarnedXP(playerObj)
             local perkId = perk:getId()
             local baselineXP = state.baselineXP[perkId]
             local currentXP = ASR.getCurrentXP(playerObj, perk)
-            local baselineLevel = state.baselineLevels[perkId]
-            local currentLevel = ASR.getPerkLevel(playerObj, perk)
-            local amount = nil
-
-            if ASR.isFiniteNumber(currentLevel) and ASR.isFiniteNumber(baselineLevel)
-                and currentLevel > baselineLevel then
-                local baselineThreshold = ASR.getLevelXP(perk, baselineLevel)
-                local currentThreshold = ASR.getLevelXP(perk, currentLevel)
-                if ASR.isFiniteNumber(baselineThreshold) and ASR.isFiniteNumber(currentThreshold) then
-                    amount = math.max(0, currentThreshold - baselineThreshold)
-                end
-            end
-
-            if not ASR.isFiniteNumber(amount) then
-                amount = RecoveryMath.earned(currentXP, baselineXP)
-            end
+            local amount = RecoveryMath.earned(currentXP, baselineXP)
 
             if amount > 0 then earned[perkId] = amount end
         end

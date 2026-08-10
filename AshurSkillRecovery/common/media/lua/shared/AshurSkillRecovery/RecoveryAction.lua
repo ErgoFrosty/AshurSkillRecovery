@@ -66,7 +66,7 @@ end
 function ASRRecoveryAction:getDuration()
     if self.character and self.character:isTimedActionInstant() then return 1 end
     local option = self.mode == "read" and "ReadActionTime" or "WriteActionTime"
-    return math.max(300, math.floor(tonumber(ASR.getOption(option, 300)) or 300))
+    return math.max(1, math.floor(tonumber(ASR.getOption(option, 300)) or 300))
 end
 
 function ASRRecoveryAction:new(character, item, mode)

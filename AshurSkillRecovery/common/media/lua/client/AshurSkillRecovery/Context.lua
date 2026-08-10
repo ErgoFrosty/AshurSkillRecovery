@@ -26,7 +26,7 @@ local function queueOperation(items, playerObj, mode)
     end
 end
 
-local function renameJournal(button, playerObj, item)
+local function renameJournal(_, button, playerObj, item)
     if button.internal ~= "OK" then return end
     local args = { itemId = item:getID(), customName = button.parent.entry:getText() }
     if isClient() then
@@ -38,8 +38,19 @@ end
 
 local function promptRename(item, playerObj)
     local data = ASR.getJournalData(item)
-    local text = data and data.customName or "Дневник восстановления"
-    local modal = ISTextBox:new(0, 0, 280, 180, getText("UI_ASR_RenamePrompt"), text, playerObj, renameJournal, item)
+    local text = data and data.customName or item:getDisplayName()
+    local modal = ISTextBox:new(
+        0, 0, 280, 180,
+        getText("UI_ASR_RenamePrompt"),
+        text,
+        nil,
+        renameJournal,
+        playerObj:getPlayerNum(),
+        playerObj,
+        item
+    )
+    modal.maxChars = 64
+    modal.noEmpty = true
     modal:initialise()
     modal:addToUIManager()
 end

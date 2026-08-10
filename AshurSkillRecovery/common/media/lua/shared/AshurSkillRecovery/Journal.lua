@@ -5,7 +5,7 @@ local Journal = {}
 local MAX_RECIPES = 4096
 local MAX_RECIPE_ID_LENGTH = 256
 local MAX_CUSTOM_NAME_LENGTH = 64
-local DEFAULT_CUSTOM_NAME = "Дневник восстановления"
+local DEFAULT_CUSTOM_NAME = "Recovery Journal"
 local logError = ASR.logError or function(...) print("[AshurSkillRecovery] ERROR:", ...) end
 
 local function newJournalId(item)
@@ -14,18 +14,40 @@ local function newJournalId(item)
     return "ASR:" .. tostring(stamp) .. ":" .. tostring(random) .. ":" .. tostring(item:getID())
 end
 
+local function characterCount(value)
+    local count = 0
+    for index = 1, #value do
+        local byte = string.byte(value, index)
+        if byte == nil or byte < 128 or byte >= 192 then count = count + 1 end
+    end
+    return count
+end
+
+local function normalizeCustomName(value)
+    if type(value) ~= "string" then return nil end
+    value = value:match("^%s*(.-)%s*$") or ""
+    if value == "" or value:find("[%c]") or characterCount(value) > MAX_CUSTOM_NAME_LENGTH then
+        return nil
+    end
+    return value
+end
+
+local function defaultJournalName(item)
+    if item and item.getDisplayName then
+        local ok, value = pcall(function() return item:getDisplayName() end)
+        local normalized = ok and normalizeCustomName(value) or nil
+        if normalized then return normalized end
+    end
+    return DEFAULT_CUSTOM_NAME
+end
+
 local function applyJournalName(item, data)
     if item.setName then pcall(function() item:setName(data.customName) end) end
     if item.setCustomName then pcall(function() item:setCustomName(true) end) end
 end
 
-local function normalizeCustomName(value)
-    if type(value) ~= "string" or value == "" or #value > MAX_CUSTOM_NAME_LENGTH then return nil end
-    return value
-end
-
 local function ensureCustomName(item, data)
-    data.customName = normalizeCustomName(data.customName) or DEFAULT_CUSTOM_NAME
+    data.customName = normalizeCustomName(data.customName) or defaultJournalName(item)
     applyJournalName(item, data)
 end
 
@@ -38,7 +60,7 @@ local function createData(item, playerObj)
         journalId = newJournalId(item),
         ownerId = ownerId,
         ownerName = ASR.getPlayerDisplayName(playerObj),
-        customName = DEFAULT_CUSTOM_NAME,
+        customName = defaultJournalName(item),
         revision = 0,
         earnedXP = {},
         recipes = {},
@@ -106,7 +128,9 @@ local function earnedRecipes(playerObj)
 end
 
 local function syncJournal(playerObj, item)
-    if isServer() then syncItemModData(playerObj, item) end
+    if not isServer() then return end
+    syncItemModData(playerObj, item)
+    if item.syncItemFields then item:syncItemFields() end
 end
 
 local function safeSavedXP(perk, value)
@@ -120,16 +144,16 @@ local function restoreXP(playerObj, perk, amount)
     local addXP = ASR.addXpNoMultiplier or addXpNoMultiplier
     if type(addXP) ~= "function" then
         logError("Cannot restore XP: addXpNoMultiplier unavailable", perk:getId())
-        return false
+        return 0
     end
 
     local before = ASR.getCurrentXP(playerObj, perk)
     local ok, err = pcall(addXP, playerObj, perk, amount)
     if not ok then
         logError("addXpNoMultiplier failed for perk", perk:getId(), err)
-        return false
+        return 0
     end
-    return ASR.getCurrentXP(playerObj, perk) > before
+    return math.max(0, ASR.getCurrentXP(playerObj, perk) - before)
 end
 
 function Journal.previewWrite(playerObj, item)
@@ -289,9 +313,10 @@ function Journal.read(playerObj, item)
             )
             local grant = RecoveryMath.grant(ASR.getCurrentXP(playerObj, perk), target)
             if grant > 0 then
-                if restoreXP(playerObj, perk, grant) then
+                local restored = restoreXP(playerObj, perk, grant)
+                if restored > 0 then
                     changedSkills = changedSkills + 1
-                    totalXP = totalXP + grant
+                    totalXP = totalXP + restored
                 end
             end
         end

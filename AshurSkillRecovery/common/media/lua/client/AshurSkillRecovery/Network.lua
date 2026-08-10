@@ -1,9 +1,24 @@
 local ASR = require "AshurSkillRecovery/Core"
 
+local function refreshInventory(playerObj)
+    if not playerObj or not getPlayerData then return end
+    local data = getPlayerData(playerObj:getPlayerNum())
+    if not data then return end
+    if data.playerInventory then data.playerInventory:refreshBackpacks() end
+    if data.lootInventory then data.lootInventory:refreshBackpacks() end
+end
+
 local function showResult(playerObj, args)
     if not playerObj then return end
     local message
     if args.ok == true and args.mode == "rename" then
+        local itemId = tonumber(args.itemId)
+        local item = itemId and playerObj:getInventory():getItemWithIDRecursiv(itemId) or nil
+        if item then
+            item:setName(args.name or item:getDisplayName())
+            item:setCustomName(true)
+        end
+        refreshInventory(playerObj)
         HaloTextHelper.addGoodText(playerObj, getText("UI_ASR_RenameSuccess", args.name or ""))
     elseif args.ok == true and args.mode == "write" then
         message = getText("UI_ASR_WriteSuccess", tostring(args.skills or 0), tostring(args.recipes or 0))

@@ -2,11 +2,15 @@ SandboxVars = {
     AshurSkillRecovery = {
         RecoveryPercentage = 100,
         RecoverRecipes = true,
-        RecoverPassiveSkills = true,
+        RecordFitness = true,
+        RecoverFitness = true,
+        RecordStrength = true,
+        RecoverStrength = true,
     },
 }
 
-function isServer() return false end
+local serverMode = false
+function isServer() return serverMode end
 function isClient() return false end
 function getTimestampMs() return 1000 end
 function getTimestamp() return 1 end
@@ -14,6 +18,7 @@ function ZombRand() return 42 end
 function addXpNoMultiplier(playerObj, targetPerk, amount)
     playerObj:getXp():AddXPNoMultiplier(targetPerk, amount)
 end
+function syncItemModData() end
 
 local parent = { getId = function() return "PhysicalCategory" end }
 
@@ -29,16 +34,11 @@ local function perk(id, passive, maximum)
     }
 end
 
+local fitness = perk("Fitness", true, 32775)
 local strength = perk("Strength", true, 32775)
 local sprinting = perk("Sprinting", false, 32775)
-local levelState = { currentLevel = 1 }
 local levelProgress = perk("LevelProgress", false, 32775)
-levelProgress.getLevel = function() return levelState.currentLevel end
-levelProgress.getTotalXpForLevel = function(_, level)
-    if level == 10 then return 32775 end
-    return level * 100
-end
-local perks = { strength, sprinting, levelProgress }
+local perks = { fitness, strength, sprinting, levelProgress }
 
 Perks = {
     getMaxIndex = function() return #perks end,
@@ -96,6 +96,7 @@ local function journal()
     function value:getContainer() return self.container end
     function value:setName(name) self.name = name end
     function value:setCustomName(value) self.customName = value end
+    function value:syncItemFields() self.syncCount = (self.syncCount or 0) + 1 end
     return value
 end
 
@@ -130,13 +131,18 @@ source.recipes.LearnedFromItem = true
 local item = journal()
 local writeResult = Journal.write(source, item)
 assert(writeResult.ok == true)
-assert(item.modData.AshurSkillRecovery.customName == "Дневник восстановления")
-assert(item.name == "Дневник восстановления")
+assert(item.modData.AshurSkillRecovery.customName == "Recovery Journal")
+assert(item.name == "Recovery Journal")
 assert(item.customName == true)
 assert(item.modData.AshurSkillRecovery.earnedXP.Strength == 1050)
 assert(item.modData.AshurSkillRecovery.earnedXP.Sprinting == 400)
 assert(item.modData.AshurSkillRecovery.recipes.LearnedFromItem == true)
 assert(item.modData.AshurSkillRecovery.recipes.StartingRecipe == nil)
+
+local exactSource = player({ Strength = 225 }, {}, "owner")
+ASR.captureBaseline(exactSource)
+exactSource.xp.Strength = 1300
+assert(ASR.calculateEarnedXP(exactSource).Strength == 1075)
 
 local second = player({ Strength = 0, Sprinting = 0 }, {}, "owner")
 ASR.captureBaseline(second)
@@ -219,6 +225,13 @@ local owner = player({ Strength = 0 }, {}, "owner")
 ASR.captureBaseline(owner)
 owner.xp.Strength = 100
 local secondJournal = journal()
+local craftedJournal = journal()
+local craftRecipeData = {
+    getFirstCreatedItem = function() return craftedJournal end,
+}
+AshurSkillRecovery.onCreateRecoveryJournal(craftRecipeData, owner)
+assert(craftedJournal.modData.AshurSkillRecovery.ownerId == "username:owner")
+
 local ownerItems = { item, secondJournal }
 owner.getInventory = function() return inventory(ownerItems) end
 local serverResult = nil
@@ -227,8 +240,8 @@ local createdData = Journal.initialize(owner, secondJournal)
 assert(createdData ~= nil)
 assert(createdData.ownerId == "username:owner")
 assert(createdData.journalId ~= item.modData.AshurSkillRecovery.journalId)
-assert(createdData.customName == "Дневник восстановления")
-assert(secondJournal.name == "Дневник восстановления")
+assert(createdData.customName == "Recovery Journal")
+assert(secondJournal.name == "Recovery Journal")
 assert(secondJournal.customName == true)
 ASR.commitOperation(owner, { mode = "write", itemId = secondJournal:getID() })
 assert(serverResult.ok == true)
@@ -239,6 +252,25 @@ ASR.renameJournal(owner, { itemId = secondJournal:getID(), customName = "Зап�
 assert(serverResult.ok == true)
 assert(secondJournal.modData.AshurSkillRecovery.customName == "Запасной дневник")
 assert(secondJournal.name == "Запасной дневник")
+
+local latinName = string.rep("A", 64)
+assert(Journal.rename(owner, secondJournal, latinName).ok == true)
+assert(secondJournal.name == latinName)
+assert(Journal.rename(owner, secondJournal, string.rep("A", 65)).ok == false)
+
+local cyrillicName = string.rep("Я", 64)
+assert(Journal.rename(owner, secondJournal, cyrillicName).ok == true)
+assert(secondJournal.name == cyrillicName)
+assert(Journal.rename(owner, secondJournal, string.rep("Я", 65)).ok == false)
+
+local trimmedRename = Journal.rename(owner, secondJournal, "  Дневник Journal  ")
+assert(trimmedRename.ok == true)
+assert(trimmedRename.name == "Дневник Journal")
+
+serverMode = true
+assert(Journal.rename(owner, secondJournal, "Сетевой Journal").ok == true)
+assert(secondJournal.syncCount == 1)
+serverMode = false
 
 local reloadedJournal = journal()
 reloadedJournal.modData.AshurSkillRecovery = secondJournal.modData.AshurSkillRecovery
@@ -256,9 +288,18 @@ ASR.commitOperation(foreign, { mode = "write", itemId = item:getID() })
 assert(serverResult.ok == false)
 assert(serverResult.reason == "UI_ASR_NotJournalOwner")
 
-SandboxVars.AshurSkillRecovery.RecoverPassiveSkills = false
+SandboxVars.AshurSkillRecovery.RecordFitness = false
+SandboxVars.AshurSkillRecovery.RecoverFitness = false
+SandboxVars.AshurSkillRecovery.RecordStrength = false
+SandboxVars.AshurSkillRecovery.RecoverStrength = false
+assert(ASR.perkRecordingEnabled(fitness) == false)
+assert(ASR.perkRecoveryEnabled(fitness) == false)
+assert(ASR.perkRecordingEnabled(strength) == false)
+assert(ASR.perkRecoveryEnabled(strength) == false)
 assert(ASR.calculateEarnedXP(source).Strength == nil)
-assert(Journal.previewRead(second, item) == 0)
-SandboxVars.AshurSkillRecovery.RecoverPassiveSkills = true
+SandboxVars.AshurSkillRecovery.RecordFitness = true
+SandboxVars.AshurSkillRecovery.RecoverFitness = true
+SandboxVars.AshurSkillRecovery.RecordStrength = true
+SandboxVars.AshurSkillRecovery.RecoverStrength = true
 
 print("journal integration: all tests passed")

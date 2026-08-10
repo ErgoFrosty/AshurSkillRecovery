@@ -6,8 +6,17 @@ option AshurSkillRecovery.RecoveryPercentage
 option AshurSkillRecovery.RecoverRecipes
 { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverRecipes, }
 
-option AshurSkillRecovery.RecoverPassiveSkills
-{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverPassiveSkills, }
+option AshurSkillRecovery.RecordFitness
+{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFitness, }
+
+option AshurSkillRecovery.RecoverFitness
+{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFitness, }
+
+option AshurSkillRecovery.RecordStrength
+{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecordStrength, }
+
+option AshurSkillRecovery.RecoverStrength
+{ type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverStrength, }
 
 option AshurSkillRecovery.RecordAiming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordAiming, }
 option AshurSkillRecovery.RecoverAiming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverAiming, }
@@ -21,22 +30,18 @@ option AshurSkillRecovery.RecordButchering { type = boolean, default = true, pag
 option AshurSkillRecovery.RecoverButchering { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverButchering, }
 option AshurSkillRecovery.RecordCarving { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordCarving, }
 option AshurSkillRecovery.RecoverCarving { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverCarving, }
-option AshurSkillRecovery.RecordCarpentry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordCarpentry, }
-option AshurSkillRecovery.RecoverCarpentry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverCarpentry, }
 option AshurSkillRecovery.RecordCooking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordCooking, }
 option AshurSkillRecovery.RecoverCooking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverCooking, }
+option AshurSkillRecovery.RecordDoctor { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordDoctor, }
+option AshurSkillRecovery.RecoverDoctor { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverDoctor, }
 option AshurSkillRecovery.RecordElectricity { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordElectricity, }
 option AshurSkillRecovery.RecoverElectricity { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverElectricity, }
 option AshurSkillRecovery.RecordFarming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFarming, }
 option AshurSkillRecovery.RecoverFarming { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFarming, }
-option AshurSkillRecovery.RecordFirstAid { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFirstAid, }
-option AshurSkillRecovery.RecoverFirstAid { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFirstAid, }
 option AshurSkillRecovery.RecordFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFishing, }
 option AshurSkillRecovery.RecoverFishing { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFishing, }
 option AshurSkillRecovery.RecordFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordFlintKnapping, }
 option AshurSkillRecovery.RecoverFlintKnapping { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverFlintKnapping, }
-option AshurSkillRecovery.RecordForaging { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordForaging, }
-option AshurSkillRecovery.RecoverForaging { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverForaging, }
 option AshurSkillRecovery.RecordGlassmaking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordGlassmaking, }
 option AshurSkillRecovery.RecoverGlassmaking { type = boolean, default = true, page = AshurSkillRecovery, translation = RecoverGlassmaking, }
 option AshurSkillRecovery.RecordHusbandry { type = boolean, default = true, page = AshurSkillRecovery, translation = RecordHusbandry, }

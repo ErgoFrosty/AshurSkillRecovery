@@ -23,8 +23,10 @@ local function resolveOwnedJournal(playerObj, itemId)
     return item
 end
 
-function AshurSkillRecovery.onCreateRecoveryJournal(items, result, playerObj)
-    if not playerObj or not ASR.isJournal(result) then return end
+function AshurSkillRecovery.onCreateRecoveryJournal(craftRecipeData, playerObj)
+    if not craftRecipeData or not playerObj or not craftRecipeData.getFirstCreatedItem then return end
+    local result = craftRecipeData:getFirstCreatedItem()
+    if not ASR.isJournal(result) then return end
     Journal.initialize(playerObj, result)
 end
 
@@ -45,7 +47,6 @@ function ASR.commitOperation(playerObj, args)
 
     ASR.ensureBaseline(playerObj)
     local result = mode == "read" and Journal.read(playerObj, item) or Journal.write(playerObj, item)
-    if isServer() then syncItemModData(playerObj, item) end
     reply(playerObj, result, mode)
 end
 
@@ -58,7 +59,7 @@ function ASR.renameJournal(playerObj, args)
         return
     end
     local result = Journal.rename(playerObj, item, args.customName)
-    if isServer() then syncItemModData(playerObj, item) end
+    result.itemId = item:getID()
     reply(playerObj, result, "rename")
 end
 

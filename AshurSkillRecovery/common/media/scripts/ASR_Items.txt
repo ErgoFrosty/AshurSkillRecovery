@@ -10,7 +10,7 @@ module AshurSkillRecovery
         DisplayCategory = Literature,
         ItemType = base:normal,
         Weight = 0.8,
-        Icon = Notebook,
+        Icon = ASRRecoveryJournal,
         Tooltip = Tooltip_ASR_Journal,
     }
 

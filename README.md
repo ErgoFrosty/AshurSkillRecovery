@@ -1,17 +1,39 @@
 # Ashur Skill Recovery
 
-Independent earned-progress recovery journal for Project Zomboid Build 42.20.
+An owner-bound recovery journal for Project Zomboid Build 42.20. It records
+skill XP and recipes learned after character creation and lets another
+character belonging to the same player restore that progress.
 
 This repository is the development source. Test builds use the mod ID
 `AshurSkillRecoveryDev`; release builds use `AshurSkillRecovery`.
 
-## Core rule
+Russian documentation: [README.ru.md](README.ru.md).
+
+## How it works
+
+1. Craft a Recovery Journal from a notebook/diary, glue, and thread, twine,
+   fishing line, or dental floss.
+2. Carry it in the character's inventory and use the context menu to record
+   progress, restore progress, or rename the journal.
+3. Store it in containers, move it between characters, or destroy it normally.
+   Its content and custom name are persisted with the item across restarts.
+
+The first character to write to a new journal becomes its owner. In multiplayer
+the stable account username identifies the owner, so other characters on that
+account may use any journal it owns. Other players cannot inspect, write,
+restore from, or rename it. The same rule applies to successive local
+characters in singleplayer.
+
+Writing is non-destructive: each journal keeps the greatest earned XP ever
+written for each skill and the union of learned recipes. A later write can add
+progress but cannot reduce the saved snapshot. Reading is also non-destructive,
+so the same journal remains useful after later deaths.
+
+## XP rule
 
 Only progress earned after character creation is recorded. XP granted by the
-character's profession and starting traits is captured as an exact baseline and
-is never transferred.
-
-For every perk:
+source character's profession and starting traits is captured as an exact
+baseline and is not transferred.
 
 ```text
 earned = max(0, currentXP - sourceBaselineXP)
@@ -19,77 +41,77 @@ target = recipientBaselineXP + earned * recoveryPercentage
 grant  = max(0, target - recipientCurrentXP)
 ```
 
-This makes recovery idempotent. Reading the same journal twice in one life
-cannot grant the same XP twice, while a later character can reuse the journal
-after another death.
+This makes recovery idempotent: reading the same journal twice during one life
+cannot grant the same XP twice. Partial progress inside a level is preserved;
+the calculation uses cumulative raw XP rather than whole levels.
 
-## Current development scope
+Restoration calls Build 42.20's verified `addXpNoMultiplier` path. Active skill
+book/literature multipliers therefore do not multiply restored journal XP. The
+success message reports the XP the game actually applied, which is relevant to
+engine restrictions on passive skills such as Fitness.
 
-- Build 42.20 only.
-- Singleplayer, hosted multiplayer, and dedicated-server code paths.
-- Exact earned XP for vanilla and discovered modded perks.
-- Optional learned-recipe recovery.
-- Optional Fitness and Strength recovery using the same baseline rule.
-- Server-side validation and calculation; clients never submit XP values.
-- No external ledger files and no runtime dependencies.
+## Skills and recipes
 
-Kills and arbitrary third-party `modData` are deliberately excluded from the
-first version.
+The mod records an explicit allow-list of vanilla Build 42.20 skills. Skills
+added by other mods are deliberately ignored so unknown category perks cannot
+be mistaken for recoverable player skills.
 
-### Recorded skills
+Every supported vanilla skill, including Fitness and Strength, has independent
+**Record** and **Restore** checkboxes. Administrators can therefore disable
+either passive skill without affecting the other and can exclude any skill in
+either direction. First Aid uses the
+actual Build 42 perk ID `Doctor`; Carpentry uses `Woodwork`; Foraging uses
+`PlantScavenging`.
 
-The mod does not maintain a fragile hard-coded skill allowlist. It enumerates
-every perk registered by the running game whose parent is a real skill category.
-This includes:
+Recipes known at character creation form the recipe baseline and are excluded.
+Recipes learned later—including through an item's Learn/Study action—are saved
+and restored only when the recipient does not already know them. One sandbox
+checkbox disables both recipe recording and recipe restoration.
 
-- Fitness and Strength (passive recovery is enabled by default and can be
-  disabled in sandbox settings);
-- Sprinting and the other physical/agility skills;
-- melee weapon and maintenance skills;
-- Aiming and Reloading;
-- crafting, farming, and survival skills;
-- compatible skills registered by other mods.
+## Sandbox settings
 
-Only the exact XP above that character's creation baseline is recorded for all
-of these skills.
+- recovery percentage: `0–100%`;
+- record/restore learned recipes;
+- separate record and restore switches for every supported vanilla skill,
+  including independent Fitness and Strength controls;
+- recording and recovery action durations: `10–5000` action units.
 
-### Recorded recipes
+All options default to enabled and the recovery percentage defaults to 100%.
 
-Recipes known at character creation are the recipe baseline and are excluded.
-Any recipe added to the character's known-recipe list later is recorded,
-including recipes learned through an item's **Learn/Study** interaction. On
-recovery, only recipes the recipient does not already know are learned. Recipe
-recovery is enabled by default and can be disabled in sandbox settings.
+## SP and MP behavior
 
-## Install a local test build
+Singleplayer performs the same validation locally. In hosted multiplayer and on
+dedicated servers, the server resolves the requested item in the player's
+inventory, checks ownership, and calculates the operation from the authoritative
+character and item state. Clients do not submit XP amounts or journal content.
+
+If the mod is enabled for an existing character, that character's state when the
+mod first initializes becomes the baseline. Earlier progress is intentionally
+not guessed or made recoverable.
+
+## Build and tests
+
+Create a development build:
+
+```powershell
+./build.ps1
+```
+
+Create and install a local test build:
 
 ```powershell
 ./build.ps1 -LocalTest
 ```
 
-Copy the resulting `dist/AshurSkillRecoveryDev` directory to the Project
-Zomboid mods directory. The development ID is different from the eventual
-public release, preventing accidental replacement of a stable install.
+Run the automated checks from the repository root:
 
-## Tests
-
-Run the pure Lua recovery-math tests from the repository root:
-
-```text
-lua tests/test_math.lua
-```
-
-Without a standalone Lua executable, use `python tests/run_lua_tests.py`
-(`lupa` is required). This also runs the mocked full journal lifecycle test.
-
-Run the structure and localization checks with Python:
-
-```text
-python tests/validate_project.py
+```powershell
+.venv\Scripts\python.exe tests\run_lua_tests.py
+.venv\Scripts\python.exe tests\validate_project.py
 ```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
-[docs/TEST-MATRIX.md](docs/TEST-MATRIX.md) before multiplayer testing.
+[docs/TEST-MATRIX.md](docs/TEST-MATRIX.md) before multiplayer release testing.
 
 ## License
 
