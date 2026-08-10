@@ -2,6 +2,6 @@ name=Ashur Skill Recovery [B42.20]
 id=AshurSkillRecovery
 description=Server-authoritative earned-skill recovery journal for Build 42.20.
 authors=ErgoFrosty
-modversion=0.2.0-dev
+modversion=0.2.1-dev
 versionMin=42.20
 

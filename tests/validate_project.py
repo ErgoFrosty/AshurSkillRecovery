@@ -71,6 +71,10 @@ def main() -> None:
     assert "item:setCustomName(true)" in journal
     assert "item:syncItemFields()" in journal
     assert "ASR.addXpNoMultiplier or addXpNoMultiplier" in journal
+    assert "playerObj:getAlreadyReadBook()" in journal
+    assert "sendSyncPlayerFields" in journal
+    assert "0x00000001" in journal
+    assert "0x00000004" in journal
 
     server = (MOD / "common" / "media" / "lua" / "server" / "AshurSkillRecovery" / "Server.lua").read_text(encoding="utf-8")
     assert "onCreateRecoveryJournal(craftRecipeData, playerObj)" in server

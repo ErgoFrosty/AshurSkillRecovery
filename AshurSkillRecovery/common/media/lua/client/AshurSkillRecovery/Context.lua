@@ -73,7 +73,7 @@ function Context.onFill(playerNum, context, items)
         context:addOptionOnTop(getText("UI_ASR_RenameAction"), journal, promptRename, playerObj)
     end
 
-    local writeSkills, writeRecipes, writeReason = Journal.previewWrite(playerObj, journal)
+    local writeSkills, writeRecipes, writeMagazines, writeReason = Journal.previewWrite(playerObj, journal)
     local writeOption = context:addOptionOnTop(
         getText("UI_ASR_WriteAction"),
         actualItems,
@@ -81,18 +81,20 @@ function Context.onFill(playerNum, context, items)
         playerObj,
         "write"
     )
-    if unavailable or writeReason or (writeSkills == 0 and writeRecipes == 0) then
+    if unavailable or writeReason
+        or (writeSkills == 0 and writeRecipes == 0 and writeMagazines == 0) then
         writeOption.notAvailable = true
         writeOption.toolTip = tooltip(getText(unavailable and "UI_ASR_CannotRead" or writeReason or "UI_ASR_NothingToWrite"))
     else
         writeOption.toolTip = tooltip(getText(
             "UI_ASR_WritePreview",
             tostring(writeSkills),
-            tostring(writeRecipes)
+            tostring(writeRecipes),
+            tostring(writeMagazines)
         ))
     end
 
-    local readSkills, readRecipes, readXP, readReason = Journal.previewRead(playerObj, journal)
+    local readSkills, readRecipes, readMagazines, readXP, readReason = Journal.previewRead(playerObj, journal)
     local readOption = context:addOptionOnTop(
         getText("UI_ASR_ReadAction"),
         actualItems,
@@ -101,7 +103,7 @@ function Context.onFill(playerNum, context, items)
         "read"
     )
     if unavailable or readReason or not ASR.hasJournalContent(journal)
-        or (readSkills == 0 and readRecipes == 0) then
+        or (readSkills == 0 and readRecipes == 0 and readMagazines == 0) then
         readOption.notAvailable = true
         local key = unavailable and "UI_ASR_CannotRead" or readReason
             or (not ASR.hasJournalContent(journal) and "UI_ASR_EmptyJournal")
@@ -112,7 +114,8 @@ function Context.onFill(playerNum, context, items)
             "UI_ASR_ReadPreview",
             tostring(readSkills),
             tostring(math.floor(readXP + 0.5)),
-            tostring(readRecipes)
+            tostring(readRecipes),
+            tostring(readMagazines)
         ))
     end
 end

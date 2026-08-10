@@ -4,6 +4,8 @@ local RecoveryMath = ASR.Math
 local Journal = {}
 local MAX_RECIPES = 4096
 local MAX_RECIPE_ID_LENGTH = 256
+local MAX_RECIPE_MAGAZINES = 4096
+local MAX_ITEM_TYPE_LENGTH = 256
 local MAX_CUSTOM_NAME_LENGTH = 64
 local DEFAULT_CUSTOM_NAME = "Recovery Journal"
 local logError = ASR.logError or function(...) print("[AshurSkillRecovery] ERROR:", ...) end
@@ -64,6 +66,7 @@ local function createData(item, playerObj)
         revision = 0,
         earnedXP = {},
         recipes = {},
+        readRecipeMagazines = {},
     }
     modData[ASR.ITEM_DATA_KEY] = data
     applyJournalName(item, data)
@@ -79,6 +82,8 @@ local function migrateData(item, data, playerObj)
     data.ownerId = ownerId
     data.ownerName = ASR.getPlayerDisplayName(playerObj)
     data.revision = math.max(0, math.floor(tonumber(data.revision) or 0))
+    data.readRecipeMagazines = type(data.readRecipeMagazines) == "table"
+        and data.readRecipeMagazines or {}
     ensureCustomName(item, data)
     return data
 end
@@ -101,6 +106,12 @@ local function validateData(item, allowCreate, playerObj)
     end
     if type(data.earnedXP) ~= "table" or type(data.recipes) ~= "table" then
         return nil, "UI_ASR_CorruptJournal"
+    end
+    if data.readRecipeMagazines ~= nil and type(data.readRecipeMagazines) ~= "table" then
+        return nil, "UI_ASR_CorruptJournal"
+    end
+    if canMutateJournal() and data.readRecipeMagazines == nil then
+        data.readRecipeMagazines = {}
     end
     if canMutateJournal() then ensureCustomName(item, data) end
     return data, nil
@@ -125,6 +136,16 @@ local function earnedRecipes(playerObj)
     local earned = ASR.calculateEarnedRecipes(playerObj)
     if type(earned) ~= "table" then return nil, "UI_ASR_DataUnavailable" end
     return earned
+end
+
+local function readRecipeMagazines(playerObj)
+    local read = ASR.getReadRecipeMagazines(playerObj)
+    if type(read) ~= "table" then return nil, "UI_ASR_DataUnavailable" end
+    return read
+end
+
+local function savedReadRecipeMagazines(data)
+    return type(data.readRecipeMagazines) == "table" and data.readRecipeMagazines or {}
 end
 
 local function syncJournal(playerObj, item)
@@ -156,40 +177,62 @@ local function restoreXP(playerObj, perk, amount)
     return math.max(0, ASR.getCurrentXP(playerObj, perk) - before)
 end
 
+local function syncPlayerKnowledge(playerObj, learnedRecipes, readMagazines)
+    local mask = 0
+    if learnedRecipes > 0 then mask = mask + 0x00000001 end -- PF_Recipes
+    if readMagazines > 0 then mask = mask + 0x00000004 end -- PF_AlreadyReadBook
+    if mask == 0 then return end
+
+    local syncFields = ASR.sendSyncPlayerFields or sendSyncPlayerFields
+    if type(syncFields) ~= "function" then
+        logError("Cannot synchronize restored recipes and literature")
+        return
+    end
+    local ok, err = pcall(syncFields, playerObj, mask)
+    if not ok then logError("sendSyncPlayerFields failed", err) end
+end
+
 function Journal.previewWrite(playerObj, item)
-    if not ASR.isJournal(item) then return nil, nil, "UI_ASR_InvalidJournal" end
+    if not ASR.isJournal(item) then return nil, nil, nil, "UI_ASR_InvalidJournal" end
     local existing = ASR.getJournalData(item)
     if existing then
         local _, reason = validateOwner(playerObj, item, false)
-        if reason then return nil, nil, reason end
+        if reason then return nil, nil, nil, reason end
     elseif not ASR.getPlayerOwnerId(playerObj) then
-        return nil, nil, "UI_ASR_OwnerUnavailable"
+        return nil, nil, nil, "UI_ASR_OwnerUnavailable"
     end
     local saved = existing and type(existing.earnedXP) == "table" and existing.earnedXP or {}
     local savedRecipes = existing and type(existing.recipes) == "table" and existing.recipes or {}
     local skills = 0
     local recipes = 0
+    local magazines = 0
     local earnedXP, earnedReason = earnedXP(playerObj)
-    if not earnedXP then return nil, nil, earnedReason end
+    if not earnedXP then return nil, nil, nil, earnedReason end
 
     for perkId, amount in pairs(earnedXP) do
         if amount > (tonumber(saved[perkId]) or 0) then skills = skills + 1 end
     end
     if ASR.getOption("RecoverRecipes", true) == true then
         local earnedRecipeSet, recipeReason = earnedRecipes(playerObj)
-        if not earnedRecipeSet then return nil, nil, recipeReason end
+        if not earnedRecipeSet then return nil, nil, nil, recipeReason end
         for recipeId in pairs(earnedRecipeSet) do
             if savedRecipes[recipeId] ~= true then recipes = recipes + 1 end
         end
+        local currentReadMagazines, magazineReason = readRecipeMagazines(playerObj)
+        if not currentReadMagazines then return nil, nil, nil, magazineReason end
+        local savedMagazines = existing and savedReadRecipeMagazines(existing) or {}
+        for fullType in pairs(currentReadMagazines) do
+            if savedMagazines[fullType] ~= true then magazines = magazines + 1 end
+        end
     end
-    return skills, recipes
+    return skills, recipes, magazines
 end
 
 function Journal.previewRead(playerObj, item)
     local data, reason = validateOwner(playerObj, item, false)
-    if not data then return nil, nil, nil, reason end
+    if not data then return nil, nil, nil, nil, reason end
     local state = ASR.ensureBaseline(playerObj)
-    if not state then return nil, nil, nil, "UI_ASR_DataUnavailable" end
+    if not state then return nil, nil, nil, nil, "UI_ASR_DataUnavailable" end
     local fraction = ASR.recoveryFraction()
     local skills = 0
     local totalXP = 0
@@ -213,6 +256,7 @@ function Journal.previewRead(playerObj, item)
     end
 
     local recipes = 0
+    local magazines = 0
     if ASR.getOption("RecoverRecipes", true) == true and type(data.recipes) == "table" then
         for recipeId, recorded in pairs(data.recipes) do
             if recorded == true and type(recipeId) == "string"
@@ -220,16 +264,23 @@ function Journal.previewRead(playerObj, item)
                 recipes = recipes + 1
             end
         end
+        local currentReadMagazines = ASR.getReadRecipeMagazines(playerObj)
+        for fullType, recorded in pairs(savedReadRecipeMagazines(data)) do
+            if recorded == true and type(fullType) == "string"
+                and currentReadMagazines[fullType] ~= true then
+                magazines = magazines + 1
+            end
+        end
     end
-    return skills, recipes, totalXP
+    return skills, recipes, magazines, totalXP
 end
 
 function Journal.write(playerObj, item)
-    local skillChanges, recipeChanges, previewReason = Journal.previewWrite(playerObj, item)
+    local skillChanges, recipeChanges, magazineChanges, previewReason = Journal.previewWrite(playerObj, item)
     if skillChanges == nil then
         return { ok = false, reason = previewReason or "UI_ASR_DataUnavailable" }
     end
-    if skillChanges == 0 and recipeChanges == 0 then
+    if skillChanges == 0 and recipeChanges == 0 and magazineChanges == 0 then
         return { ok = false, reason = "UI_ASR_NothingToWrite" }
     end
 
@@ -252,6 +303,16 @@ function Journal.write(playerObj, item)
                 data.recipes[recipeId] = true
             end
         end
+        local currentReadMagazines, magazineReason = readRecipeMagazines(playerObj)
+        if not currentReadMagazines then return { ok = false, reason = magazineReason } end
+        local inspected = 0
+        for fullType in pairs(currentReadMagazines) do
+            inspected = inspected + 1
+            if inspected > MAX_RECIPE_MAGAZINES then break end
+            if type(fullType) == "string" and #fullType <= MAX_ITEM_TYPE_LENGTH then
+                data.readRecipeMagazines[fullType] = true
+            end
+        end
     end
 
     data.revision = math.max(0, math.floor(tonumber(data.revision) or 0)) + 1
@@ -263,6 +324,7 @@ function Journal.write(playerObj, item)
         ok = true,
         skills = skillChanges,
         recipes = recipeChanges,
+        magazines = magazineChanges,
         revision = data.revision,
     }
 end
@@ -323,6 +385,7 @@ function Journal.read(playerObj, item)
     end
 
     local learnedRecipes = 0
+    local restoredMagazines = 0
     if ASR.getOption("RecoverRecipes", true) == true then
         local inspected = 0
         for recipeId, recorded in pairs(data.recipes) do
@@ -331,13 +394,29 @@ function Journal.read(playerObj, item)
             if recorded == true and type(recipeId) == "string"
                 and #recipeId <= MAX_RECIPE_ID_LENGTH
                 and not playerObj:isRecipeActuallyKnown(recipeId) then
-                playerObj:learnRecipe(recipeId)
-                learnedRecipes = learnedRecipes + 1
+                local ok = pcall(function() playerObj:learnRecipe(recipeId) end)
+                if ok and playerObj:isRecipeActuallyKnown(recipeId) then
+                    learnedRecipes = learnedRecipes + 1
+                end
             end
         end
+
+        local alreadyRead = playerObj:getAlreadyReadBook()
+        local inspectedMagazines = 0
+        for fullType, recorded in pairs(savedReadRecipeMagazines(data)) do
+            inspectedMagazines = inspectedMagazines + 1
+            if inspectedMagazines > MAX_RECIPE_MAGAZINES then break end
+            if recorded == true and type(fullType) == "string"
+                and #fullType <= MAX_ITEM_TYPE_LENGTH
+                and not alreadyRead:contains(fullType) then
+                alreadyRead:add(fullType)
+                restoredMagazines = restoredMagazines + 1
+            end
+        end
+        syncPlayerKnowledge(playerObj, learnedRecipes, restoredMagazines)
     end
 
-    if changedSkills == 0 and learnedRecipes == 0 then
+    if changedSkills == 0 and learnedRecipes == 0 and restoredMagazines == 0 then
         return { ok = false, reason = "UI_ASR_NothingToRestore" }
     end
 
@@ -345,6 +424,7 @@ function Journal.read(playerObj, item)
         ok = true,
         skills = changedSkills,
         recipes = learnedRecipes,
+        magazines = restoredMagazines,
         xp = totalXP,
     }
 end

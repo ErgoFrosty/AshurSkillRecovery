@@ -25,9 +25,10 @@ restore from, or rename it. The same rule applies to successive local
 characters in singleplayer.
 
 Writing is non-destructive: each journal keeps the greatest earned XP ever
-written for each skill and the union of learned recipes. A later write can add
-progress but cannot reduce the saved snapshot. Reading is also non-destructive,
-so the same journal remains useful after later deaths.
+written for each skill, the union of learned recipes, and the set of completed
+recipe magazines. A later write can add progress but cannot reduce the saved
+snapshot. Reading is also non-destructive, so the same journal remains useful
+after later deaths.
 
 ## XP rule
 
@@ -65,13 +66,21 @@ actual Build 42 perk ID `Doctor`; Carpentry uses `Woodwork`; Foraging uses
 
 Recipes known at character creation form the recipe baseline and are excluded.
 Recipes learned later—including through an item's Learn/Study action—are saved
-and restored only when the recipient does not already know them. One sandbox
-checkbox disables both recipe recording and recipe restoration.
+and restored only when the recipient does not already know them. Recipe
+magazines completed by the writer are recorded separately and restored as read,
+so `MechanicMag1`, which teaches `Basic Mechanics`, appears in the recipient's
+literature history.
+Skill books, partially read pages, and literature XP multipliers are not copied.
+
+In multiplayer, restored recipes and completed-magazine markers are synchronized
+from the authoritative server to the client using the same player-field flags as
+the vanilla reading action. One sandbox checkbox disables recording and
+restoration of both recipes and recipe-magazine history.
 
 ## Sandbox settings
 
 - recovery percentage: `0–100%`;
-- record/restore learned recipes;
+- record/restore learned recipes and completed recipe magazines;
 - separate record and restore switches for every supported vanilla skill,
   including independent Fitness and Strength controls;
 - recording and recovery action durations: `10–5000` action units.

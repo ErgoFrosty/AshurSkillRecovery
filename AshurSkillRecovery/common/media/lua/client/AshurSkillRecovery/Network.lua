@@ -21,14 +21,20 @@ local function showResult(playerObj, args)
         refreshInventory(playerObj)
         HaloTextHelper.addGoodText(playerObj, getText("UI_ASR_RenameSuccess", args.name or ""))
     elseif args.ok == true and args.mode == "write" then
-        message = getText("UI_ASR_WriteSuccess", tostring(args.skills or 0), tostring(args.recipes or 0))
+        message = getText(
+            "UI_ASR_WriteSuccess",
+            tostring(args.skills or 0),
+            tostring(args.recipes or 0),
+            tostring(args.magazines or 0)
+        )
         HaloTextHelper.addGoodText(playerObj, message)
     elseif args.ok == true then
         message = getText(
             "UI_ASR_ReadSuccess",
             tostring(args.skills or 0),
             tostring(math.floor((tonumber(args.xp) or 0) + 0.5)),
-            tostring(args.recipes or 0)
+            tostring(args.recipes or 0),
+            tostring(args.magazines or 0)
         )
         HaloTextHelper.addGoodText(playerObj, message)
     else

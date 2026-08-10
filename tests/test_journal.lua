@@ -19,6 +19,10 @@ function addXpNoMultiplier(playerObj, targetPerk, amount)
     playerObj:getXp():AddXPNoMultiplier(targetPerk, amount)
 end
 function syncItemModData() end
+local syncPlayerFieldCalls = {}
+function sendSyncPlayerFields(playerObj, mask)
+    syncPlayerFieldCalls[#syncPlayerFieldCalls + 1] = { player = playerObj, mask = mask }
+end
 
 local parent = { getId = function() return "PhysicalCategory" end }
 
@@ -52,10 +56,26 @@ local function javaList(values)
     }
 end
 
-local function player(initialXP, initialRecipes, username)
+local function javaStringSet(values)
+    local function ordered()
+        local result = {}
+        for value in pairs(values) do result[#result + 1] = value end
+        table.sort(result)
+        return result
+    end
+    return {
+        size = function() return #ordered() end,
+        get = function(_, index) return ordered()[index + 1] end,
+        contains = function(_, value) return values[value] == true end,
+        add = function(_, value) values[value] = true end,
+    }
+end
+
+local function player(initialXP, initialRecipes, username, initialReadRecipeMagazines)
     local value = {
         xp = initialXP or {},
         recipes = initialRecipes or {},
+        readRecipeMagazines = initialReadRecipeMagazines or {},
         modData = {},
         username = username or "tester",
     }
@@ -74,6 +94,7 @@ local function player(initialXP, initialRecipes, username)
         table.sort(result)
         return javaList(result)
     end
+    function value:getAlreadyReadBook() return javaStringSet(self.readRecipeMagazines) end
     function value:getHoursSurvived() return 0 end
     function value:getUsername() return self.username end
     function value:getFullName() return self.username end
@@ -109,6 +130,7 @@ emptyJournal.modData.AshurSkillRecovery = {
     schemaVersion = ASR.SCHEMA_VERSION,
     earnedXP = {},
     recipes = {},
+    readRecipeMagazines = {},
 }
 local savedNext = next
 next = nil
@@ -127,6 +149,7 @@ ASR.captureBaseline(source)
 source.xp.Strength = 1275
 source.xp.Sprinting = 400
 source.recipes.LearnedFromItem = true
+source.readRecipeMagazines["Base.MechanicMag1"] = true
 
 local item = journal()
 local writeResult = Journal.write(source, item)
@@ -138,6 +161,8 @@ assert(item.modData.AshurSkillRecovery.earnedXP.Strength == 1050)
 assert(item.modData.AshurSkillRecovery.earnedXP.Sprinting == 400)
 assert(item.modData.AshurSkillRecovery.recipes.LearnedFromItem == true)
 assert(item.modData.AshurSkillRecovery.recipes.StartingRecipe == nil)
+assert(item.modData.AshurSkillRecovery.readRecipeMagazines["Base.MechanicMag1"] == true)
+assert(writeResult.magazines == 1)
 
 local exactSource = player({ Strength = 225 }, {}, "owner")
 ASR.captureBaseline(exactSource)
@@ -151,12 +176,16 @@ assert(firstRead.ok == true)
 assert(second.xp.Strength == 1050)
 assert(second.xp.Sprinting == 400)
 assert(second.recipes.LearnedFromItem == true)
+assert(second.readRecipeMagazines["Base.MechanicMag1"] == true)
+assert(firstRead.magazines == 1)
+assert(syncPlayerFieldCalls[#syncPlayerFieldCalls].mask == 0x00000005)
 
 local repeatedRead = Journal.read(second, item)
 assert(repeatedRead.ok == false)
 assert(repeatedRead.reason == "UI_ASR_NothingToRestore")
 assert(second.xp.Strength == 1050)
 assert(second.xp.Sprinting == 400)
+assert(repeatedRead.magazines == nil)
 
 local third = player({ Strength = 0, Sprinting = 0 }, {}, "owner")
 ASR.captureBaseline(third)
@@ -165,8 +194,14 @@ assert(thirdRead.ok == true)
 assert(third.xp.Strength == 1050)
 assert(third.xp.Sprinting == 400)
 assert(third.recipes.LearnedFromItem == true)
+assert(third.readRecipeMagazines["Base.MechanicMag1"] == true)
 
-local failedRestore = player({ Strength = 0, Sprinting = 0 }, { LearnedFromItem = true }, "owner")
+local failedRestore = player(
+    { Strength = 0, Sprinting = 0 },
+    { LearnedFromItem = true },
+    "owner",
+    { ["Base.MechanicMag1"] = true }
+)
 ASR.captureBaseline(failedRestore)
 local savedAddXpNoMultiplier = addXpNoMultiplier
 local savedASRAddXpNoMultiplier = ASR.addXpNoMultiplier
@@ -182,6 +217,24 @@ local recipientWithOwnBonus = player({ Strength = 225, Sprinting = 0 }, {}, "own
 ASR.captureBaseline(recipientWithOwnBonus)
 assert(Journal.read(recipientWithOwnBonus, item).ok == true)
 assert(recipientWithOwnBonus.xp.Strength == 1275)
+
+local magazineOnlySource = player({ Strength = 0 }, { StartingRecipe = true }, "owner")
+ASR.captureBaseline(magazineOnlySource)
+magazineOnlySource.readRecipeMagazines["Base.MechanicMag1"] = true
+local magazineOnlyJournal = journal()
+local magazineOnlyWrite = Journal.write(magazineOnlySource, magazineOnlyJournal)
+assert(magazineOnlyWrite.ok == true)
+assert(magazineOnlyWrite.skills == 0)
+assert(magazineOnlyWrite.recipes == 0)
+assert(magazineOnlyWrite.magazines == 1)
+local magazineOnlyRecipient = player({ Strength = 0 }, { StartingRecipe = true }, "owner")
+ASR.captureBaseline(magazineOnlyRecipient)
+local magazineOnlyRead = Journal.read(magazineOnlyRecipient, magazineOnlyJournal)
+assert(magazineOnlyRead.ok == true)
+assert(magazineOnlyRead.recipes == 0)
+assert(magazineOnlyRead.magazines == 1)
+assert(magazineOnlyRecipient.readRecipeMagazines["Base.MechanicMag1"] == true)
+assert(syncPlayerFieldCalls[#syncPlayerFieldCalls].mask == 0x00000004)
 
 local foreign = player({ Strength = 0, Sprinting = 0 }, {}, "foreign")
 ASR.captureBaseline(foreign)
@@ -200,6 +253,25 @@ assert(legacy.modData.AshurSkillRecovery.schemaVersion == ASR.SCHEMA_VERSION)
 assert(legacy.modData.AshurSkillRecovery.ownerId == "username:legacy-owner")
 assert(legacy.modData.AshurSkillRecovery.customName == "Старый дневник")
 assert(legacy.name == "Старый дневник")
+
+local previousDevJournal = journal()
+previousDevJournal.modData.AshurSkillRecovery = {
+    schemaVersion = ASR.SCHEMA_VERSION,
+    journalId = "ASR:previous-dev",
+    ownerId = "username:previous-dev-owner",
+    ownerName = "previous-dev-owner",
+    customName = "Дневник 0.2.0-dev",
+    revision = 1,
+    earnedXP = {},
+    recipes = { LegacyRecipe = true },
+}
+local previousDevOwner = player({ Strength = 0 }, {}, "previous-dev-owner")
+ASR.captureBaseline(previousDevOwner)
+local previousDevRead = Journal.read(previousDevOwner, previousDevJournal)
+assert(previousDevRead.ok == true)
+assert(previousDevOwner.recipes.LegacyRecipe == true)
+assert(type(previousDevJournal.modData.AshurSkillRecovery.readRecipeMagazines) == "table")
+assert(syncPlayerFieldCalls[#syncPlayerFieldCalls].mask == 0x00000001)
 
 CharacterTrait = { ILLITERATE = "Illiterate" }
 Events = { OnClientCommand = { Add = function() end } }

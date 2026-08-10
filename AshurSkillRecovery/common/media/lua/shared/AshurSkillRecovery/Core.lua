@@ -131,17 +131,30 @@ function ASR.getCurrentXP(playerObj, perk)
     return math.max(0, value)
 end
 
-local function knownRecipeSet(playerObj)
-    local recipes = {}
-    local known = playerObj:getKnownRecipes()
-    if not known then return recipes end
-    for index = 0, known:size() - 1 do
-        local recipeId = known:get(index)
-        if type(recipeId) == "string" and recipeId ~= "" then
-            recipes[recipeId] = true
+local function javaStringSet(values)
+    local result = {}
+    if not values or not values.size or not values.get then return result end
+    for index = 0, values:size() - 1 do
+        local value = values:get(index)
+        if type(value) == "string" and value ~= "" then
+            result[value] = true
         end
     end
-    return recipes
+    return result
+end
+
+local function knownRecipeSet(playerObj)
+    return javaStringSet(playerObj:getKnownRecipes())
+end
+
+function ASR.getReadRecipeMagazines(playerObj)
+    if not playerObj or not playerObj.getAlreadyReadBook then return {} end
+    local ok, values = pcall(function() return playerObj:getAlreadyReadBook() end)
+    if not ok then return {} end
+    -- Build 42 adds only completed literature with LearnedRecipes to this list.
+    -- Skill books and their XP multipliers are tracked elsewhere and are not
+    -- journalled by Ashur Skill Recovery.
+    return javaStringSet(values)
 end
 
 local function newLifeId(playerObj)
@@ -263,7 +276,8 @@ function ASR.hasJournalContent(item)
     local data = ASR.getJournalData(item)
     if not data or data.schemaVersion ~= ASR.SCHEMA_VERSION then return false end
     if type(data.earnedXP) == "table" and hasEntries(data.earnedXP) then return true end
-    return type(data.recipes) == "table" and hasEntries(data.recipes)
+    if type(data.recipes) == "table" and hasEntries(data.recipes) then return true end
+    return type(data.readRecipeMagazines) == "table" and hasEntries(data.readRecipeMagazines)
 end
 
 return ASR

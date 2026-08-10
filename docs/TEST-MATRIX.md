@@ -42,7 +42,14 @@ unless marked otherwise.
 - Recipe learned later is recorded and restored.
 - Recipe learned through an item's Learn/Study interaction is recorded and
   restored.
-- Disable recipe recovery: neither writing nor reading transfers recipes.
+- Fully read `MechanicMag1`: after recovery, `Basic Mechanics` is usable and the
+  magazine appears read without reconnecting in hosted MP and dedicated server.
+- A recipe already known from a starting trait but whose magazine was read
+  later restores the read-magazine marker without duplicating the recipe.
+- Read the same recovery journal twice: recipe and magazine markers are not
+  duplicated.
+- Disable recipe recovery: neither writing nor reading transfers recipes or
+  completed recipe-magazine markers.
 - Disable Record for each vanilla skill: new XP for that skill is not written.
 - Disable Restore for each vanilla skill: saved XP for that skill is not added.
 - Verify First Aid (`Doctor`), Carpentry (`Woodwork`), and Foraging

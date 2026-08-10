@@ -39,6 +39,7 @@ The item stores a schema-versioned snapshot:
 - a monotonically increasing revision;
 - the maximum earned raw XP observed per supported vanilla perk;
 - the union of recipes learned after character creation;
+- the union of completed recipe-magazine item types from `getAlreadyReadBook()`;
 - the persisted custom name plus display-only author/update metadata.
 
 Writing is a maximum merge, so a weaker or newer character cannot reduce an
@@ -67,3 +68,7 @@ The item may otherwise use normal inventory behavior: moving it into a
 container, dropping it, and trash deletion require no special ledger cleanup
 because all journal state is stored on the item itself. Reading/writing/renaming
 requires the item to be in the acting player's recursive inventory.
+
+After restoration, the server synchronizes `PF_Recipes` (`0x1`) and
+`PF_AlreadyReadBook` (`0x4`) with `sendSyncPlayerFields`. Skill-book page
+progress and XP multipliers use different state and are deliberately excluded.
