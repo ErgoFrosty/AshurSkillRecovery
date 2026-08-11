@@ -55,8 +55,25 @@ if ($LocalTest) {
     $localInfoPath = Join-Path $localTestMod '42\mod.info'
     $localInfo = Get-Content -LiteralPath $localInfoPath -Raw
     $localInfo = $localInfo -replace '(?m)^name=.*$', 'name=Ashur Skill Recovery DEV [B42.20]'
-    $localInfo = $localInfo -replace '(?m)^id=AshurSkillRecovery$', 'id=AshurSkillRecoveryDev'
+    $localInfo = $localInfo -replace '(?m)^id=AshurSkillRecovery\r?$', 'id=AshurSkillRecoveryDev'
+    if ($localInfo -notmatch '(?m)^id=AshurSkillRecoveryDev\r?$') {
+        throw 'Failed to assign the distinct DEV mod ID.'
+    }
     Set-Content -LiteralPath $localInfoPath -Value $localInfo -NoNewline -Encoding utf8
+
+    $localTestPageNames = @{
+        EN = 'Ashur Skill Recovery DEV'
+        RU = 'Ashur Skill Recovery DEV'
+    }
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    foreach ($language in $localTestPageNames.Keys) {
+        $translationPath = Join-Path $localTestMod "common\media\lua\shared\Translate\$language\Sandbox.json"
+        $translationJson = [IO.File]::ReadAllText($translationPath, [Text.Encoding]::UTF8)
+        $translation = $translationJson | ConvertFrom-Json
+        $translation.Sandbox_AshurSkillRecovery = $localTestPageNames[$language]
+        $translationJson = $translation | ConvertTo-Json -Depth 4
+        [IO.File]::WriteAllText($translationPath, $translationJson, $utf8NoBom)
+    }
 
     Compress-Archive -LiteralPath $localTestMod -DestinationPath $localTestZip -CompressionLevel Optimal
     Write-Host "Local-test mod: $localTestMod"

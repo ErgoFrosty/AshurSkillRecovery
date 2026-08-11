@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import struct
 from pathlib import Path
@@ -8,6 +9,44 @@ from luaparser import ast
 
 ROOT = Path(__file__).resolve().parents[1]
 MOD = ROOT / "AshurSkillRecovery"
+
+VANILLA_SKILL_TRANSLATION_KEYS = {
+    "Aiming": "IGUI_perks_Aiming",
+    "Axe": "IGUI_perks_Axe",
+    "Blacksmith": "IGUI_perks_Blacksmith",
+    "Blunt": "IGUI_perks_Blunt",
+    "Butchering": "IGUI_perks_Butchering",
+    "Carving": "IGUI_perks_Carving",
+    "Cooking": "IGUI_perks_Cooking",
+    "Doctor": "IGUI_perks_Doctor",
+    "Electricity": "IGUI_perks_Electricity",
+    "Farming": "IGUI_perks_Farming",
+    "Fishing": "IGUI_perks_Fishing",
+    "Fitness": "IGUI_perks_Fitness",
+    "FlintKnapping": "IGUI_perks_FlintKnapping",
+    "Glassmaking": "IGUI_perks_Glassmaking",
+    "Husbandry": "IGUI_perks_Husbandry",
+    "Lightfoot": "IGUI_perks_Lightfooted",
+    "LongBlade": "IGUI_perks_LongBlade",
+    "Maintenance": "IGUI_perks_Maintenance",
+    "Masonry": "IGUI_perks_Masonry",
+    "Mechanics": "IGUI_perks_Mechanics",
+    "MetalWelding": "IGUI_perks_MetalWelding",
+    "Nimble": "IGUI_perks_Nimble",
+    "PlantScavenging": "IGUI_perks_Foraging",
+    "Pottery": "IGUI_perks_Pottery",
+    "Reloading": "IGUI_perks_Reloading",
+    "SmallBlade": "IGUI_perks_SmallBlade",
+    "SmallBlunt": "IGUI_perks_SmallBlunt",
+    "Sneak": "IGUI_perks_Sneaking",
+    "Spear": "IGUI_perks_Spear",
+    "Sprinting": "IGUI_perks_Sprinting",
+    "Strength": "IGUI_perks_Strength",
+    "Tailoring": "IGUI_perks_Tailoring",
+    "Tracking": "IGUI_perks_Tracking",
+    "Trapping": "IGUI_perks_Trapping",
+    "Woodwork": "IGUI_perks_Woodwork",
+}
 
 
 def main() -> None:
@@ -48,6 +87,9 @@ def main() -> None:
     allowlist = core.split("ASR.VANILLA_PERK_IDS = {", 1)[1].split("}", 1)[0]
     perk_ids = set(re.findall(r"\b([A-Z][A-Za-z]+)\s*=\s*true", allowlist))
     configurable_perks = perk_ids
+    assert configurable_perks == set(VANILLA_SKILL_TRANSLATION_KEYS), (
+        "vanilla skill translation map does not match the recovery allow-list"
+    )
     sandbox = (MOD / "common" / "media" / "sandbox-options.txt").read_text(encoding="utf-8")
     translations = []
     for language in ("EN", "RU"):
@@ -79,7 +121,10 @@ def main() -> None:
     }
     ru_sandbox = translations[1]
     for perk_id, vanilla_name in vanilla_ru_names.items():
-        assert ru_sandbox[f"Sandbox_Enable{perk_id}"] == vanilla_name
+        translation_key = VANILLA_SKILL_TRANSLATION_KEYS[perk_id]
+        assert ru_sandbox[f"Sandbox_Enable{perk_id}"] == vanilla_name, (
+            f"RU label for {perk_id} must match {translation_key}"
+        )
 
     vanilla_en_names = {
         "Aiming": "Aiming", "Axe": "Axe", "Blacksmith": "Blacksmithing",
@@ -98,7 +143,28 @@ def main() -> None:
     }
     en_sandbox = translations[0]
     for perk_id, vanilla_name in vanilla_en_names.items():
-        assert en_sandbox[f"Sandbox_Enable{perk_id}"] == vanilla_name
+        translation_key = VANILLA_SKILL_TRANSLATION_KEYS[perk_id]
+        assert en_sandbox[f"Sandbox_Enable{perk_id}"] == vanilla_name, (
+            f"EN label for {perk_id} must match {translation_key}"
+        )
+
+    game_dir_value = os.environ.get("PROJECT_ZOMBOID_DIR")
+    if game_dir_value:
+        game_dir = Path(game_dir_value)
+        for language, sandbox_translation in (("EN", en_sandbox), ("RU", ru_sandbox)):
+            vanilla_path = game_dir / "media" / "lua" / "shared" / "Translate" / language / "IG_UI.json"
+            assert vanilla_path.is_file(), f"missing vanilla translation: {vanilla_path}"
+            vanilla_translation = json.loads(vanilla_path.read_text(encoding="utf-8"))
+            for perk_id, translation_key in VANILLA_SKILL_TRANSLATION_KEYS.items():
+                assert sandbox_translation[f"Sandbox_Enable{perk_id}"] == vanilla_translation[translation_key], (
+                    f"{language} label for {perk_id} differs from installed game key {translation_key}"
+                )
+
+    build_script = (ROOT / "build.ps1").read_text(encoding="utf-8")
+    assert "name=Ashur Skill Recovery DEV [B42.20]" in build_script
+    assert "id=AshurSkillRecoveryDev" in build_script
+    assert "Failed to assign the distinct DEV mod ID." in build_script
+    assert "translation.Sandbox_AshurSkillRecovery" in build_script
 
     context = (MOD / "common" / "media" / "lua" / "client" / "AshurSkillRecovery" / "Context.lua").read_text(encoding="utf-8")
     assert "local function promptRename(item, playerObj)" in context

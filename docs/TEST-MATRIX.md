@@ -51,8 +51,13 @@ unless marked otherwise.
 - Disable recipe recovery: neither writing nor reading transfers recipes or
   completed recipe-magazine markers.
 - Disable each vanilla skill: its XP is neither written nor restored.
+- With `PROJECT_ZOMBOID_DIR` set to Build 42.20, validate that all 35 English
+  and Russian sandbox labels match their vanilla `IGUI_perks_*` values.
 - Verify First Aid (`Doctor`), Carpentry (`Woodwork`), and Foraging
   (`PlantScavenging`) switches affect their actual Build 42 perks.
+- Install the Workshop package and the `-LocalTest` package together: the mod
+  list and sandbox pages distinguish production from `Ashur Skill Recovery
+  DEV`. Enable only one variant in the save.
 - Set action time below the old 300-unit floor (for example 10): the configured
   duration is honored.
 - Mod added to an existing character: existing XP/recipes become baseline.
