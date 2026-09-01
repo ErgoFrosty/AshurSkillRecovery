@@ -113,24 +113,6 @@ English documentation: [README.md](README.md).
 ./build.ps1 -LocalTest
 ```
 
-Тестовый пакет намеренно получает название `Ashur Skill Recovery DEV` и ID мода
-`AshurSkillRecoveryDev`; страница его настроек песочницы также помечена `DEV`.
-Поэтому его можно установить рядом с production-версией из Мастерской Steam.
-В одном сохранении включайте только один вариант: оба используют одинаковые
-пространства имён предмета дневника и сохраняемых данных.
-
-Названия навыков в настройках песочницы скопированы из ванильных переводов
-Build 42.20 `IGUI_perks_*`. Если перед проверкой задать `PROJECT_ZOMBOID_DIR`,
-валидатор напрямую сопоставит все 35 английских и русских названий с файлами
-установленной игры.
-
-Запустить автоматические проверки из корня репозитория:
-
-```powershell
-.venv\Scripts\python.exe tests\run_lua_tests.py
-.venv\Scripts\python.exe tests\validate_project.py
-```
-
 Перед релизным тестированием MP см. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 и [docs/TEST-MATRIX.md](docs/TEST-MATRIX.md).
 
