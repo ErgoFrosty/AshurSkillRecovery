@@ -108,23 +108,6 @@ Create and install a local test build:
 ./build.ps1 -LocalTest
 ```
 
-The local-test package is deliberately identified as `Ashur Skill Recovery DEV`
-with mod ID `AshurSkillRecoveryDev`; its sandbox page carries the same DEV label.
-It can therefore be installed alongside the Steam Workshop production package.
-Enable only one variant in a save at a time because both variants operate on the
-same journal item and saved-data namespaces.
-
-Sandbox skill labels are copied from the vanilla Build 42.20 `IGUI_perks_*`
-translations. Set `PROJECT_ZOMBOID_DIR` when running validation to compare all 35
-English and Russian labels directly with the installed game files.
-
-Run the automated checks from the repository root:
-
-```powershell
-.venv\Scripts\python.exe tests\run_lua_tests.py
-.venv\Scripts\python.exe tests\validate_project.py
-```
-
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
 [docs/TEST-MATRIX.md](docs/TEST-MATRIX.md) before multiplayer release testing.
 
